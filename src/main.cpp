@@ -1,25 +1,14 @@
 #include "graph.h"
 #include <iostream>
-#include <list>
+#include <set>
 #include <vector>
+#include <tuple>
 using std::cout;
 using std::endl;
 using std::ostream;
-using std::list;
+using std::set;
 using std::vector;
-
-/*
-AUX(G)
-	{
-		G' = copy of G
-		Tg = BFS(G) -- optimize this part --
-		for each non-tree edge e = (u, v) in G \ Tg do
-			x = LCA(u, v)
-			remove (x, u) and (x, v) from G'
-			add x' to G'
-			add (x, x'), (x', u), and (x', v) to G'
-	}
-*/
+using std::pair;
 
 size_t leastCommonAncestor(const Graph &t, size_t u, size_t v)
 {
@@ -37,46 +26,48 @@ size_t leastCommonAncestor(const Graph &t, size_t u, size_t v)
 }
 
 /*
+AUX(G)
+	{
+		G' = copy of G
+		Tg = BFS(G) -- optimize this part --
+		for each non-tree edge e = (u, v) in G \ Tg do
+			x = LCA(u, v)
+			remove (x, u) and (x, v) from G'
+			add x' to G'
+			add (x, x'), (x', u), and (x', v) to G'
+	}
+*/
+
 Graph auxiliaryGraph(const Graph &g)
 {
-	Graph gPrime(g);
-	Tree t(g);
+	set< pair<size_t, size_t> > nonTreeEdges;
 	
-	for(size_t i = 0; i < g.V(); i++)
+	Graph gPrime(g);
+	Graph t = Graph::BFSTree(g, &nonTreeEdges);
+	
+	for(set< pair<size_t, size_t> >::iterator j = nonTreeEdges.begin(); j != nonTreeEdges.end(); ++j)
 	{
-		
-		
-		for(size_t j = i+1; j < g.V(); j++)
-		{
-			if(g.hasEdge(i, j) && !t.isTreeEdge(i, j))
-			{
-				cout << i << ", " << j << endl;
-				
-				size_t x = leastCommonAncestor(g, i, j);
-				size_t b1 = i, b2 = j; // todo: fixme
-				gPrime.removeEdge(x, b1);
-				gPrime.removeEdge(x, b2);
-				
-				size_t xPrime = gPrime.addVertex();
-				gPrime.addEdge(x, xPrime);
-				gPrime.addEdge(xPrime, b1);
-				gPrime.addEdge(xPrime, b2);
-				
-				// todo: what if multiple cycles share LCA?
-			}
-		}
+		size_t x = leastCommonAncestor(t, j->first, j->second);
+		size_t xPrime = gPrime.V();
+		size_t b1 = j->first, b2 = j->second; // todo: fixme
+		gPrime.removeEdge(x, b1);
+		gPrime.removeEdge(x, b2);
+		gPrime.addVertex();
+		gPrime.addEdge(x, xPrime);
+		gPrime.addEdge(xPrime, b1);
+		gPrime.addEdge(xPrime, b2);
 	}
 	
 	return gPrime;
 }
-*/
 
 void printGraph(const Graph &g, ostream &out = cout)
 {
 	for(size_t i = 0; i < g.V(); i++)
 	{
-		for(list<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
-			out << *j << " ";
+		cout << char('a' + i) << ": ";
+		for(set<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
+			out << char('a' + *j) << " ";
 		out << endl;
 	}
 }
@@ -92,20 +83,14 @@ int main(int argc, char **argv)
 	if(argc > 1)
 	{
 		Graph g(argv[1]);
+		g.removeEdge(1, 5);
 		cout << "Graph:\n" << g << endl;
 		
 		Graph t = Graph::BFSTree(g);
 		cout << "Tree:\n" << t << endl;
 		
-		for(size_t i = 0; i < t.V(); i++)
-			for(size_t j = i+1; j < t.V(); j++)
-				cout << "LCA(" << i << ", " << j << ") = " << leastCommonAncestor(t, i, j) << endl;
-		
-		/*
-		cout << "Graph Prime:" << endl;
 		Graph gPrime = auxiliaryGraph(g);
-		cout << gPrime << endl;
-		*/
+		cout << "Graph Prime:\n" << gPrime << endl;
 	}
 	else
 	{

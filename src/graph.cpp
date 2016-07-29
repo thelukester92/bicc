@@ -3,13 +3,15 @@
 #include <fstream>
 #include <stdexcept>
 using std::vector;
-using std::list;
+using std::set;
+using std::pair;
+using std::make_pair;
 using std::queue;
 using std::ifstream;
 using std::invalid_argument;
 
 // static
-Graph Graph::BFSTree(const Graph &g)
+Graph Graph::BFSTree(const Graph &g, set< pair<size_t, size_t> > *nonTreeEdges)
 {
 	Graph t(g.V());
 	t.m_parent.resize(g.V());
@@ -17,6 +19,7 @@ Graph Graph::BFSTree(const Graph &g)
 	t.m_isTree = true;
 	
 	vector<bool> discovered(g.V(), false);
+	vector<bool> visited(g.V(), false);
 	for(size_t i = 0; i < g.V(); i++)
 	{
 		if(!discovered[i])
@@ -30,16 +33,31 @@ Graph Graph::BFSTree(const Graph &g)
 			{
 				size_t u = Q.front();
 				Q.pop();
-				for(list<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
+				
+				if(visited[u])
+					continue;
+				visited[u] = true;
+				
+				for(set<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
 				{
-					if(!discovered[*j])
+					if(!visited[*j])
 					{
-						discovered[*j] = true;
-						t.m_parent[*j] = u;
-						t.m_level[*j] = t.m_level[u] + 1;
-						t.m_adj[u].push_back(*j);
-						t.m_adj[*j].push_back(u);
-						Q.push(*j);
+						if(!discovered[*j])
+						{
+							discovered[*j] = true;
+							t.m_parent[*j] = u;
+							t.m_level[*j] = t.m_level[u] + 1;
+							t.m_adj[u].insert(*j);
+							t.m_adj[*j].insert(u);
+							Q.push(*j);
+						}
+						else if(nonTreeEdges)
+						{
+							if(u < *j)
+								nonTreeEdges->insert(make_pair(u, *j));
+							else
+								nonTreeEdges->insert(make_pair(*j, u));
+						}
 					}
 				}
 			}
@@ -65,40 +83,33 @@ Graph::Graph(const char *filename)
 		for(size_t i = 0; i < numE; i++)
 		{
 			fin >> v;
-			m_adj[u].push_back(v);
-			m_adj[v].push_back(u);
+			m_adj[u].insert(v);
+			m_adj[v].insert(u);
 		}
 	}
 }
 
 void Graph::addVertex()
 {
-	m_adj.push_back(list<size_t>());
+	m_adj.push_back(set<size_t>());
 }
 
 void Graph::addEdge(size_t u, size_t v)
 {
-	list<size_t>::iterator i;
-	
-	for(i = m_adj[u].begin(); i != m_adj[u].end() && *i < v; ++i);
-	m_adj[u].insert(i, v);
-	
-	for(i = m_adj[v].begin(); i != m_adj[v].end() && *i < u; ++i);
-	m_adj[v].insert(i, u);
+	m_adj[u].insert(v);
+	m_adj[v].insert(u);
 }
 
 void Graph::removeEdge(size_t u, size_t v)
 {
-	list<size_t>::iterator i;
+	set<size_t>::iterator i = m_adj[u].find(v);
+	if(i != m_adj[u].end()) m_adj[u].erase(i);
 	
-	for(i = m_adj[u].begin(); *i != v; ++i);
-	m_adj[u].erase(i);
-	
-	for(i = m_adj[v].begin(); *i != u; ++i);
-	m_adj[v].erase(i);
+	i = m_adj[v].find(u);
+	if(i != m_adj[v].end()) m_adj[v].erase(i);
 }
 
-const list<size_t> &Graph::adj(size_t i) const
+const set<size_t> &Graph::adj(size_t i) const
 {
 	return m_adj[i];
 }
