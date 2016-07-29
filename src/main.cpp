@@ -10,15 +10,16 @@ using std::set;
 using std::vector;
 using std::pair;
 
-size_t leastCommonAncestor(const Graph &t, size_t u, size_t v)
+size_t leastCommonAncestor(const Graph &t, size_t u, size_t v, size_t *c1 = NULL, size_t *c2 = NULL)
 {
 	if(!t.isTree())
-		return leastCommonAncestor(Graph::BFSTree(t), u, v);
-	
+		return leastCommonAncestor(Graph::BFSTree(t), u, v, c1, c2);
 	while(t.level(u) > t.level(v)) u = t.parent(u);
 	while(t.level(v) > t.level(u)) v = t.parent(v);
 	while(u != v)
 	{
+		if(c1) *c1 = u;
+		if(c2) *c2 = v;
 		u = t.parent(u);
 		v = t.parent(v);
 	}
@@ -47,9 +48,9 @@ Graph auxiliaryGraph(const Graph &g)
 	
 	for(set< pair<size_t, size_t> >::iterator j = nonTreeEdges.begin(); j != nonTreeEdges.end(); ++j)
 	{
-		size_t x = leastCommonAncestor(t, j->first, j->second);
+		size_t b1, b2;
+		size_t x = leastCommonAncestor(t, j->first, j->second, &b1, &b2);
 		size_t xPrime = gPrime.V();
-		size_t b1 = j->first, b2 = j->second; // todo: fixme
 		gPrime.removeEdge(x, b1);
 		gPrime.removeEdge(x, b2);
 		gPrime.addVertex();
