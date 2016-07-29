@@ -18,16 +18,16 @@ Graph::Graph(const char *filename)
 	for(size_t u = 0; u < numV; u++)
 	{
 		fin >> numE;
-		m_adj[u].resize(numE);
 		for(size_t i = 0; i < numE; i++)
 		{
 			fin >> v;
-			m_adj[u][i] = v;
+			m_adj[u].push_back(v);
+			m_adj[v].push_back(u);
 		}
 	}
 }
 
-vector<size_t> &Graph::adj(size_t i)
+const vector<size_t> &Graph::adj(size_t i) const
 {
 	return m_adj[i];
 }
