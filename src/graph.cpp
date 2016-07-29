@@ -11,7 +11,7 @@ using std::ifstream;
 using std::invalid_argument;
 
 // static
-Graph Graph::BFSTree(const Graph &g, set< pair<size_t, size_t> > *nonTreeEdges)
+Graph Graph::BFSTree(const Graph &g, std::set<size_t> *connectedComponents, set< pair<size_t, size_t> > *nonTreeEdges)
 {
 	Graph t(g.V());
 	t.m_parent.resize(g.V());
@@ -24,6 +24,9 @@ Graph Graph::BFSTree(const Graph &g, set< pair<size_t, size_t> > *nonTreeEdges)
 	{
 		if(!discovered[i])
 		{
+			if(connectedComponents)
+				connectedComponents->insert(i);
+			
 			discovered[i] = true;
 			t.m_parent[i] = i;
 			t.m_level[i] = 0;

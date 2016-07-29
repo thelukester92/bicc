@@ -8,7 +8,7 @@
 class Graph
 {
 public:
-	static Graph BFSTree(const Graph &g, std::set< std::pair<size_t, size_t> > *nonTreeEdges = NULL);
+	static Graph BFSTree(const Graph &g, std::set<size_t> *connectedComponents = NULL, std::set< std::pair<size_t, size_t> > *nonTreeEdges = NULL);
 	
 	Graph(size_t v = 0);
 	Graph(const char *filename);
