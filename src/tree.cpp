@@ -1,39 +1,44 @@
 #include "tree.h"
 #include <queue>
-#include <tuple>
-#include <set>
 using std::vector;
 using std::queue;
-using std::pair;
-using std::make_pair;
-using std::set;
 
-Tree::Tree(size_t v) : Graph(v), m_treeEdge(V())
+Tree::Tree(size_t v) : Graph(v), m_tAdj(V(), vector<bool>(V(), false))
 {
 	identifyTreeEdges();
 }
 
-Tree::Tree(const char *filename) : Graph(filename), m_treeEdge(V())
+Tree::Tree(const char *filename) : Graph(filename), m_tAdj(V(), vector<bool>(V(), false))
 {
 	identifyTreeEdges();
 }
 
-Tree::Tree(const Graph &g) : Graph(g), m_treeEdge(V())
+Tree::Tree(const Graph &g) : Graph(g), m_tAdj(V(), vector<bool>(V(), false))
 {
 	identifyTreeEdges();
 }
 
-const vector<bool> &Tree::treeEdges(size_t i) const
+// virtual
+void Tree::addVertex()
 {
-	return m_treeEdge[i];
+	Graph::addVertex();
+}
+
+// virtual
+void Tree::addEdge(size_t u, size_t v)
+{
+	Graph::addEdge(u, v);
+}
+
+bool Tree::isTreeEdge(size_t u, size_t v) const
+{
+	return m_tAdj[u][v];
 }
 
 // private
 void Tree::identifyTreeEdges()
 {
 	vector<bool> discovered(V(), false);
-	set< pair<size_t, size_t> > tEdges;
-	
 	for(size_t i = 0; i < V(); i++)
 	{
 		if(!discovered[i])
@@ -45,28 +50,17 @@ void Tree::identifyTreeEdges()
 			{
 				size_t u = Q.front();
 				Q.pop();
-				for(size_t j = 0; j < adj(u).size(); j++)
+				for(size_t j = 0; j < V(); j++)
 				{
-					if(!discovered[adj(u)[j]])
+					if(hasEdge(u, j) && !discovered[j])
 					{
-						discovered[adj(u)[j]] = true;
-						tEdges.insert(make_pair(u, adj(u)[j]));
-						Q.push(adj(u)[j]);
+						discovered[j] = true;
+						m_tAdj[u][j] = true;
+						m_tAdj[j][u] = true;
+						Q.push(j);
 					}
 				}
 			}
-		}
-	}
-	
-	for(size_t i = 0; i < V(); i++)
-	{
-		m_treeEdge[i].resize(adj(i).size(), false);
-		for(size_t j = 0; j < adj(i).size(); j++)
-		{
-			if(i < adj(i)[j])
-				m_treeEdge[i][j] = tEdges.count(make_pair(i, adj(i)[j]));
-			else
-				m_treeEdge[i][j] = tEdges.count(make_pair(adj(i)[j], i));
 		}
 	}
 }
