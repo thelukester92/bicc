@@ -30,9 +30,9 @@ size_t leastCommonAncestor(const Graph &t, size_t u, size_t v, size_t *c1 = NULL
 	return u;
 }
 
-void removeBridges(const Graph &g, const Graph &t, const set< pair<size_t, size_t> > &nonTreeEdges, Graph &gPrime, set<size_t> &roots)
+vector<Graph> removeBridges(const Graph &g, const Graph &t, const set< pair<size_t, size_t> > &nonTreeEdges)
 {
-	gPrime = g;
+	Graph gPrime(g);
 	
 	set< pair<size_t, size_t> > bridges;
 	for(size_t i = 0; i < g.V(); i++)
@@ -67,12 +67,16 @@ void removeBridges(const Graph &g, const Graph &t, const set< pair<size_t, size_
 	}
 	
 	for(set< pair<size_t, size_t> >::iterator i = bridges.begin(); i != bridges.end(); ++i)
-	{
-		cout << "bridge: " << i->first << " " << i->second << endl;
 		gPrime.removeEdge(i->first, i->second);
-	}
 	
-	Graph::BFSTree(gPrime, &roots);
+	vector< vector<size_t> > components;
+	Graph::BFSTree(gPrime, &components);
+	
+	vector<Graph> forest(components.size());
+	for(size_t i = 0; i < components.size(); i++)
+		forest[i] = Graph(gPrime, components[i]);
+	
+	return forest;
 }
 
 Graph auxiliaryGraph(const Graph &g)
@@ -80,7 +84,7 @@ Graph auxiliaryGraph(const Graph &g)
 	set< pair<size_t, size_t> > nonTreeEdges;
 	
 	Graph gPrime(g);
-	Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
+	Graph t = Graph::BFSTreeRooted(g, 0, &nonTreeEdges);
 	
 	for(set< pair<size_t, size_t> >::iterator j = nonTreeEdges.begin(); j != nonTreeEdges.end(); ++j)
 	{
@@ -89,7 +93,7 @@ Graph auxiliaryGraph(const Graph &g)
 		size_t xPrime = gPrime.V();
 		gPrime.removeEdge(x, b1);
 		gPrime.removeEdge(x, b2);
-		gPrime.addVertex();
+		gPrime.addVertex(g.vertex(x));
 		gPrime.addEdge(x, xPrime);
 		gPrime.addEdge(xPrime, b1);
 		gPrime.addEdge(xPrime, b2);
@@ -102,9 +106,9 @@ void printGraph(const Graph &g, ostream &out = cout)
 {
 	for(size_t i = 0; i < g.V(); i++)
 	{
-		cout << char('a' + i) << ": ";
+		cout << char('a' + g.vertex(i)) << ": ";
 		for(set<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
-			out << char('a' + *j) << " ";
+			out << char('a' + g.vertex(*j)) << " ";
 		out << endl;
 	}
 }
@@ -115,6 +119,34 @@ ostream &operator<<(ostream &out, const Graph &g)
 	return out;
 }
 
+set< set<size_t> > biconnectedComponents(const Graph &g)
+{
+	set< set<size_t> > components;
+	set< pair<size_t, size_t> > nonTreeEdges;
+	Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
+	
+	vector<Graph> forest = removeBridges(g, t, nonTreeEdges);
+	for(size_t i = 0; i < forest.size(); i++)
+	{
+		Graph gPrime = auxiliaryGraph(forest[i]);
+		
+		set< pair<size_t, size_t> > nonTreeEdgesPrime;
+		Graph tPrime = Graph::BFSTreeRooted(gPrime, 0, &nonTreeEdgesPrime);
+		vector<Graph> fPrime = removeBridges(gPrime, tPrime, nonTreeEdgesPrime);
+		
+		for(size_t j = 0; j < fPrime.size(); j++)
+		{
+			set<size_t> component;
+			for(size_t k = 0; k < fPrime[j].V(); k++)
+				component.insert(fPrime[j].vertex(k));
+			if(component.size() > 1)
+				components.insert(component);
+		}
+	}
+	
+	return components;
+}
+
 int main(int argc, char **argv)
 {
 	if(argc > 1)
@@ -122,20 +154,14 @@ int main(int argc, char **argv)
 		Graph g(argv[1]);
 		cout << "Graph:\n" << g << endl;
 		
-		set< pair<size_t, size_t> > nonTreeEdges;
-		Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
-		cout << "Tree:\n" << t << endl;
-		
-		Graph gPrime = auxiliaryGraph(g);
-		cout << "Graph Prime:\n" << gPrime << endl;
-		
-		Graph f;
-		set<size_t> roots;
-		removeBridges(g, t, nonTreeEdges, f, roots);
-		cout << "Removed bridges:\n" << f << endl << "roots:\n";
-		for(set<size_t>::iterator i = roots.begin(); i != roots.end(); ++i)
-			cout << *i << " ";
-		cout << endl;
+		set< set<size_t> > components = biconnectedComponents(g);
+		cout << "Biconnected components:" << endl;
+		for(set< set<size_t> >::iterator i = components.begin(); i != components.end(); ++i)
+		{
+			for(set<size_t>::iterator j = i->begin(); j != i->end(); ++j)
+				cout << char('a' + *j) << " ";
+			cout << endl;
+		}
 	}
 	else
 	{

@@ -2,6 +2,7 @@
 #include <queue>
 #include <fstream>
 #include <stdexcept>
+#include <map>
 using std::vector;
 using std::set;
 using std::pair;
@@ -9,9 +10,63 @@ using std::make_pair;
 using std::queue;
 using std::ifstream;
 using std::invalid_argument;
+using std::map;
 
 // static
-Graph Graph::BFSTree(const Graph &g, std::set<size_t> *connectedComponents, set< pair<size_t, size_t> > *nonTreeEdges)
+Graph Graph::BFSTreeRooted(const Graph &g, size_t root, set< pair<size_t, size_t> > *nonTreeEdges)
+{
+	Graph t(g.V());
+	t.m_parent.resize(g.V());
+	t.m_level.resize(g.V());
+	t.m_isTree = true;
+	
+	vector<bool> discovered(g.V(), false);
+	vector<bool> visited(g.V(), false);
+	
+	discovered[root] = true;
+	t.m_parent[root] = root;
+	t.m_level[root] = 0;
+	
+	queue<size_t> Q;
+	Q.push(root);
+	while(!Q.empty())
+	{
+		size_t u = Q.front();
+		Q.pop();
+		
+		if(visited[u])
+			continue;
+		visited[u] = true;
+		
+		for(set<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
+		{
+			if(!visited[*j])
+			{
+				if(!discovered[*j])
+				{
+					discovered[*j] = true;
+					t.m_parent[*j] = u;
+					t.m_level[*j] = t.m_level[u] + 1;
+					t.m_adj[u].insert(*j);
+					t.m_adj[*j].insert(u);
+					Q.push(*j);
+				}
+				else if(nonTreeEdges)
+				{
+					if(u < *j)
+						nonTreeEdges->insert(make_pair(u, *j));
+					else
+						nonTreeEdges->insert(make_pair(*j, u));
+				}
+			}
+		}
+	}
+	
+	return t;
+}
+
+// static
+Graph Graph::BFSTree(const Graph &g, vector< vector<size_t> > *components, set< pair<size_t, size_t> > *nonTreeEdges)
 {
 	Graph t(g.V());
 	t.m_parent.resize(g.V());
@@ -24,8 +79,8 @@ Graph Graph::BFSTree(const Graph &g, std::set<size_t> *connectedComponents, set<
 	{
 		if(!discovered[i])
 		{
-			if(connectedComponents)
-				connectedComponents->insert(i);
+			if(components)
+				components->push_back(vector<size_t>());
 			
 			discovered[i] = true;
 			t.m_parent[i] = i;
@@ -40,6 +95,9 @@ Graph Graph::BFSTree(const Graph &g, std::set<size_t> *connectedComponents, set<
 				if(visited[u])
 					continue;
 				visited[u] = true;
+				
+				if(components)
+					components->back().push_back(u);
 				
 				for(set<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
 				{
@@ -69,8 +127,14 @@ Graph Graph::BFSTree(const Graph &g, std::set<size_t> *connectedComponents, set<
 	return t;
 }
 
-Graph::Graph(size_t v) : m_adj(v)
-{}
+Graph::Graph(size_t v) : m_vertices(v), m_aliases(v), m_adj(v)
+{
+	for(size_t i = 0; i < v; i++)
+	{
+		m_aliases[i] = -1;
+		m_vertices[i] = i;
+	}
+}
 
 Graph::Graph(const char *filename)
 {
@@ -90,11 +154,41 @@ Graph::Graph(const char *filename)
 			m_adj[v].insert(u);
 		}
 	}
+	
+	m_aliases.resize(numV);
+	m_vertices.resize(numV);
+	for(size_t i = 0; i < numV; i++)
+	{
+		m_aliases[i] = -1;
+		m_vertices[i] = i;
+	}
 }
 
-void Graph::addVertex()
+Graph::Graph(const Graph &g, const vector<size_t> vertices) : m_vertices(vertices.size()), m_aliases(vertices.size()), m_adj(vertices.size())
+{
+	map<size_t, size_t> index;
+	for(size_t i = 0; i < vertices.size(); i++)
+	{
+		m_vertices[i] = g.m_vertices[vertices[i]];
+		m_aliases[i] = g.m_aliases[vertices[i]];
+		index[vertices[i]] = i;
+	}
+	
+	for(size_t i = 0; i < vertices.size(); i++)
+	{
+		for(set<size_t>::iterator j = g.m_adj[vertices[i]].begin(); j != g.m_adj[vertices[i]].end(); ++j)
+		{
+			m_adj[i].insert(index[*j]);
+			m_adj[index[*j]].insert(i);
+		}
+	}
+}
+
+void Graph::addVertex(size_t alias)
 {
 	m_adj.push_back(set<size_t>());
+	m_aliases.push_back(alias);
+	m_vertices.push_back(m_vertices.back() + 1);
 }
 
 void Graph::addEdge(size_t u, size_t v)
@@ -115,6 +209,14 @@ void Graph::removeEdge(size_t u, size_t v)
 const set<size_t> &Graph::adj(size_t i) const
 {
 	return m_adj[i];
+}
+
+size_t Graph::vertex(size_t i) const
+{
+	if(m_aliases[i] < m_aliases.size())
+		return m_aliases[i];
+	else
+		return m_vertices[i];
 }
 
 size_t Graph::V() const
