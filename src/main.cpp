@@ -21,9 +21,11 @@ AUX(G)
 	}
 */
 
-size_t leastCommonAncestor(const Graph &g, size_t u, size_t v)
+size_t leastCommonAncestor(const Graph &t, size_t u, size_t v)
 {
-	Graph t = Graph::BFSTree(g);
+	if(!t.isTree())
+		return leastCommonAncestor(Graph::BFSTree(t), u, v);
+	
 	while(t.level(u) > t.level(v)) u = t.parent(u);
 	while(t.level(v) > t.level(u)) v = t.parent(v);
 	while(u != v)
