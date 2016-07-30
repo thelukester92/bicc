@@ -18,6 +18,7 @@ public:
 	void addVertex(size_t alias = -1);
 	void addEdge(size_t u, size_t v);
 	void removeEdge(size_t u, size_t v);
+	std::set<size_t> &adj(size_t i);
 	const std::set<size_t> &adj(size_t i) const;
 	size_t vertex(size_t i) const;
 	size_t V() const;

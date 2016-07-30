@@ -1,6 +1,7 @@
 #include "graph.h"
 #include <iostream>
 #include <set>
+#include <map>
 #include <vector>
 #include <tuple>
 using std::cout;
@@ -10,6 +11,7 @@ using std::set;
 using std::vector;
 using std::pair;
 using std::make_pair;
+using std::map;
 
 size_t leastCommonAncestor(const Graph &t, size_t u, size_t v, size_t *c1 = NULL, size_t *c2 = NULL)
 {
@@ -126,7 +128,7 @@ set< set<size_t> > biconnectedComponents(const Graph &g)
 	Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
 	
 	vector<Graph> forest = removeBridges(g, t, nonTreeEdges);
-	for(size_t i = 0; i < forest.size(); i++)
+	for(size_t i = 0; i < forest.size(); i++) // todo: parallelize this loop
 	{
 		Graph gPrime = auxiliaryGraph(forest[i]);
 		
@@ -147,6 +149,127 @@ set< set<size_t> > biconnectedComponents(const Graph &g)
 	return components;
 }
 
+vector<size_t> eulerianTour(const Graph &t)
+{
+	vector<size_t> tour;
+	map< size_t, pair<size_t, size_t> > first;
+	map< pair<size_t, size_t>, pair<size_t, size_t> > next, succ;
+	pair<size_t, size_t> prev, curr;
+	
+	for(size_t i = 0; i < t.V(); i++)
+	{
+		for(set<size_t>::const_iterator j = t.adj(i).begin(); j != t.adj(i).end(); ++j)
+		{
+			if(j == t.adj(i).begin())
+			{
+				prev = make_pair(i, *j);
+				first[i] = prev;
+			}
+			else
+			{
+				next[prev] = make_pair(i, *j);
+				prev = next[prev];
+			}
+		}
+	}
+	
+	for(size_t i = 0; i < t.V(); i++)
+	{
+		for(set<size_t>::const_iterator j = t.adj(i).begin(); j != t.adj(i).end(); ++j)
+		{
+			curr = make_pair(i, *j);
+			map< pair<size_t, size_t>, pair<size_t, size_t> >::iterator s = next.find(make_pair(*j, i));
+			if(s != next.end())
+				succ[curr] = s->second;
+			else
+				succ[curr] = first[i];
+			
+			cout << "next(" << curr.second << ", " << curr.first << ") = (" << next[make_pair(*j, i)].first << ", " << next[make_pair(*j, i)].second << ")" << endl;
+			cout << "succ(" << curr.first << ", " << curr.second << ") = (" << succ[curr].first << ", " << succ[curr].second << ")" << endl;
+		}
+	}
+	
+	tour.push_back(0);
+	curr = first[0];
+	while(curr.second != 0 && tour.size() < 10)
+	{
+		cout << "(" << curr.first << ", " << curr.second << ") -> ";
+		tour.push_back(curr.second);
+		curr = succ[curr];
+	}
+	cout << endl;
+	
+	return tour;
+}
+
+Graph tarjanVishkinAuxiliaryGraph(const Graph &g)
+{
+	set< pair<size_t, size_t> > nonTreeEdges;
+	Graph tPrime = Graph::BFSTreeRooted(g, 0, &nonTreeEdges);
+	Graph gPrime(g);
+	gPrime.addVertex();
+	
+	for(size_t i = 0; i < tPrime.V(); i++)
+		gPrime.adj(i).clear();
+	
+	// first, all tree edges
+	for(size_t i = 0; i < tPrime.V(); i++)
+	{
+		for(set<size_t>::const_iterator j = tPrime.adj(i).begin(); j != tPrime.adj(i).end(); ++j)
+		{
+			if(*j < i)
+				gPrime.addEdge(i, g.V());
+			if(leastCommonAncestor(tPrime, i, *j) == 0)
+				gPrime.addEdge(i, *j);
+		}
+	}
+	
+	// next, all non-tree edges
+	for(set< pair<size_t, size_t> >::iterator i = nonTreeEdges.begin(); i != nonTreeEdges.end(); ++i)
+	{
+		if(i->first != 0 && i->second != 0)
+			gPrime.addEdge(i->first, i->second);
+	}
+	
+	cout << "====" << endl << gPrime << endl;
+	
+	return gPrime;
+}
+
+set< set<size_t> > tarjanVishkin(const Graph &g)
+{
+	set< set<size_t> > components;
+	set< pair<size_t, size_t> > nonTreeEdges;
+	Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
+	
+	vector<Graph> forest = removeBridges(g, t, nonTreeEdges);
+	for(size_t i = 0; i < forest.size(); i++) // todo: parallelize this loop
+	{
+		vector< vector<size_t> > cPrime;
+		Graph tPrime = Graph::BFSTree(forest[i]);
+		vector<size_t> eTour = eulerianTour(tPrime);
+		
+		cout << "=====" << endl;
+		for(size_t i = 0; i < eTour.size(); i++)
+			cout << eTour[i] << " ";
+		cout << endl;
+		
+		// Graph gPrime = tarjanVishkinAuxiliaryGraph(forest[i], eTour); // or parallelize this function?
+		// Graph::BFSTree(gPrime, &cPrime);
+		
+		for(size_t j = 0; j < cPrime.size(); j++)
+		{
+			set<size_t> component;
+			for(size_t k = 0; k < cPrime[j].size(); k++)
+				component.insert(g.vertex(cPrime[j][k]));
+			if(component.size() > 1)
+				components.insert(component);
+		}
+	}
+	
+	return components;
+}
+
 int main(int argc, char **argv)
 {
 	if(argc > 1)
@@ -156,6 +279,16 @@ int main(int argc, char **argv)
 		
 		set< set<size_t> > components = biconnectedComponents(g);
 		cout << "Biconnected components:" << endl;
+		for(set< set<size_t> >::iterator i = components.begin(); i != components.end(); ++i)
+		{
+			for(set<size_t>::iterator j = i->begin(); j != i->end(); ++j)
+				cout << char('a' + *j) << " ";
+			cout << endl;
+		}
+		cout << endl;
+		
+		components = tarjanVishkin(g);
+		cout << "Tarjan Vishkin:" << endl;
 		for(set< set<size_t> >::iterator i = components.begin(); i != components.end(); ++i)
 		{
 			for(set<size_t>::iterator j = i->begin(); j != i->end(); ++j)

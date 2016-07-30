@@ -206,6 +206,11 @@ void Graph::removeEdge(size_t u, size_t v)
 	if(i != m_adj[v].end()) m_adj[v].erase(i);
 }
 
+set<size_t> &Graph::adj(size_t i)
+{
+	return m_adj[i];
+}
+
 const set<size_t> &Graph::adj(size_t i) const
 {
 	return m_adj[i];
