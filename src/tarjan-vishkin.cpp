@@ -3,6 +3,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 #include <tuple>
 #include <algorithm>
 #include <queue>
@@ -276,11 +277,34 @@ void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
 	}
 }
 
+void remapAuxiliaryGraph(const Graph &t, const Graph &nt, const vector<size_t> &parent, const vector< vector<size_t> > &components, vector< set<size_t> > &bicc)
+{
+	bicc.resize(components.size());
+	for(size_t i = 0; i < components.size(); i++)
+	{
+		for(size_t j = 0; j < components[i].size(); j++)
+		{
+			if(components[i][j] < t.V())
+			{
+				bicc[i].insert(j);
+				bicc[i].insert(parent[j]);
+			}
+			else
+			{
+				size_t u = nt.edges()[components[i][j] - t.V()].first, v = nt.edges()[components[i][j] - t.V()].second;
+				bicc[i].insert(u);
+				bicc[i].insert(v);
+			}
+		}
+	}
+}
+
 void TV(const Graph &g)
 {
 	Graph t, nt, gPrime;
 	vector<size_t> succ, parent, level, preorder, low;
 	vector< vector<size_t> > components;
+	vector< set<size_t> > bicc;
 	
 	spanningTree(g, t, nt, parent, level);
 	eulerTour(t, succ);
@@ -288,6 +312,7 @@ void TV(const Graph &g)
 	findLow(t, nt, level, low);
 	auxiliaryGraph(g, t, nt, parent, level, preorder, low, gPrime);
 	connectedComponents(gPrime, components);
+	remapAuxiliaryGraph(t, nt, parent, components, bicc);
 	
 	cout << "Graph:\n" << g << endl;
 	cout << "MST:\n" << t << endl;
@@ -297,12 +322,12 @@ void TV(const Graph &g)
 		cout << g.vertex(i) << ": " << preorder[i] << endl;
 	cout << endl;
 	cout << "Auxiliary:\n" << gPrime << endl;
-	cout << "Components:\n";
-	for(size_t i = 0; i < components.size(); i++)
+	cout << "BiCC:\n";
+	for(size_t i = 0; i < bicc.size(); i++)
 	{
 		cout << i << ": ";
-		for(size_t j = 0; j < components[i].size(); j++)
-			cout << components[i][j] << " ";
+		for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
+			cout << g.vertex(*j) << " ";
 		cout << endl;
 	}
 }
