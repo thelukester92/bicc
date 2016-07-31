@@ -10,7 +10,7 @@
 #include "tarjan-vishkin.h"
 using namespace std;
 
-void TarjanVishkin::spanningTree()
+void TarjanVishkin::spanningTree(const Graph &g)
 {
 	vector<bool> visited(g.V(), false), discovered(g.V(), false);
 	
@@ -152,7 +152,7 @@ size_t TarjanVishkin::LCA(size_t u, size_t v)
 	return u;
 }
 
-void TarjanVishkin::auxiliaryGraph()
+void TarjanVishkin::auxiliaryGraph(const Graph &g)
 {
 	gPrime.resize(g.V() + nt.E() / 2);
 	vector<size_t> N(g.E(), 0);
@@ -247,14 +247,13 @@ void TarjanVishkin::remapAuxiliaryGraph(vector< set<size_t> > &bicc)
 }
 
 // virtual
-void TarjanVishkin::getBiCC(const Graph &p_g, vector< set<size_t> > &bicc)
+void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 {
-	g = p_g;
-	spanningTree();
+	spanningTree(g);
 	eulerTour();
 	preorderVertices();
 	findLow();
-	auxiliaryGraph();
+	auxiliaryGraph(g);
 	connectedComponents();
 	remapAuxiliaryGraph(bicc);
 }
