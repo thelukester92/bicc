@@ -120,25 +120,38 @@ void eulerTour(const Graph &t, vector<size_t> &succ)
 	}
 }
 
+void preorderVertices(const Graph &t, const vector<size_t> &succ, vector<size_t> &preorder)
+{
+	preorder.resize(t.V(), -1);
+	preorder[t.edges()[0].first] = 0;
+	preorder[t.edges()[0].second] = 1;
+	
+	size_t i = 0, j = 2;
+	do
+	{
+		size_t k = t.edges()[succ[i]].second;
+		if(preorder[k] == -1)
+			preorder[t.edges()[succ[i]].second] = j++;
+		i = succ[i];
+	}
+	while(i != 0);
+}
+
 void TV(const Graph &g)
 {
-	Graph t, nt;
-	vector<size_t> succ;
+	Graph t, nt, gPrime;
+	vector<size_t> succ, preorder;
 	
 	spanningTree(g, t, nt);
 	eulerTour(t, succ);
+	preorderVertices(t, succ, preorder);
 	
 	cout << "Graph:\n" << g << endl;
 	cout << "MST:\n" << t << endl;
 	cout << "NTE:\n" << nt << endl;
-	cout << "Tour:\n";
-	size_t i = 0;
-	do
-	{
-		cout << t.vertex(t.edges()[i].first) << ", " << t.vertex(t.edges()[i].second) << endl;
-		i = succ[i];
-	}
-	while(i != 0);
+	cout << "Preorder:\n";
+	for(size_t i = 0; i < g.V(); i++)
+		cout << g.vertex(i) << ": " << preorder[i] << endl;
 }
 
 int main(int argc, char **argv)
