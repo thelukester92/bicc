@@ -232,9 +232,10 @@ void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vecto
 		}
 		else
 		{
+			size_t p = LCA(parent, level, u, v);
 			if(preorder[v] < preorder[u])
 				gPrime.addEdge(u, N[i] + g.V() - 1);
-			if(LCA(parent, level, u, v) != u && LCA(parent, level, u, v) != v)
+			if(u < v && p != u && p != v)
 				gPrime.addEdge(u, v);
 			nti++;
 		}
