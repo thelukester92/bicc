@@ -227,7 +227,7 @@ void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vecto
 		size_t u = g.edges()[i].first, v = g.edges()[i].second;
 		if(nti >= nt.edges().size() || g.edges()[i] == t.edges()[ti])
 		{
-			if(preorder[u] < preorder[v] && low[v] < preorder[u])
+			if(preorder[u] < preorder[v] && preorder[low[v]] < preorder[u])
 				gPrime.addEdge(u, v);
 			ti++;
 		}
@@ -279,16 +279,16 @@ void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
 
 void remapAuxiliaryGraph(const Graph &t, const Graph &nt, const vector<size_t> &parent, const vector< vector<size_t> > &components, vector< set<size_t> > &bicc)
 {
-	bicc.resize(components.size());
-	for(size_t i = 0; i < components.size(); i++)
+	bicc.resize(components.size() - 1);
+	for(size_t i = 1; i < components.size(); i++)
 	{
 		for(size_t j = 0; j < components[i].size(); j++)
 		{
 			// only consider tree edges (since non-tree edges include already-included vertices)
 			if(components[i][j] < t.V())
 			{
-				bicc[i].insert(components[i][j]);
-				bicc[i].insert(parent[components[i][j]]);
+				bicc[i-1].insert(components[i][j]);
+				bicc[i-1].insert(parent[components[i][j]]);
 			}
 		}
 	}
