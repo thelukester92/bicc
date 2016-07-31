@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <tuple>
+#include <stdexcept>
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -12,6 +13,7 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 using std::map;
+using std::invalid_argument;
 
 size_t leastCommonAncestor(const Graph &t, size_t u, size_t v, size_t *c1 = NULL, size_t *c2 = NULL)
 {
@@ -149,9 +151,11 @@ set< set<size_t> > biconnectedComponents(const Graph &g)
 	return components;
 }
 
-vector<size_t> eulerianTour(const Graph &t)
+vector< pair<size_t, size_t> > eulerianTour(const Graph &t)
 {
-	vector<size_t> tour;
+	if(!t.isTree()) throw invalid_argument("can only get eulerian tour from a tree");
+	
+	vector< pair<size_t, size_t> > tour;
 	map< size_t, pair<size_t, size_t> > first;
 	map< pair<size_t, size_t>, pair<size_t, size_t> > next, succ;
 	pair<size_t, size_t> prev, curr;
@@ -182,44 +186,54 @@ vector<size_t> eulerianTour(const Graph &t)
 			if(s != next.end())
 				succ[curr] = s->second;
 			else
-				succ[curr] = first[i];
-			
-			cout << "next(" << curr.second << ", " << curr.first << ") = (" << next[make_pair(*j, i)].first << ", " << next[make_pair(*j, i)].second << ")" << endl;
-			cout << "succ(" << curr.first << ", " << curr.second << ") = (" << succ[curr].first << ", " << succ[curr].second << ")" << endl;
+				succ[curr] = first[*j];
 		}
 	}
 	
-	tour.push_back(0);
-	curr = first[0];
-	while(curr.second != 0 && tour.size() < 10)
+	tour.push_back(first[0]);
+	while(succ[tour.back()] != first[0])
 	{
-		cout << "(" << curr.first << ", " << curr.second << ") -> ";
-		tour.push_back(curr.second);
-		curr = succ[curr];
+		tour.push_back(succ[tour.back()]);
 	}
-	cout << endl;
 	
 	return tour;
 }
 
-Graph tarjanVishkinAuxiliaryGraph(const Graph &g)
+Graph tarjanVishkinAuxiliaryGraph(const Graph &g, const vector< pair<size_t, size_t> > &eTour)
 {
 	set< pair<size_t, size_t> > nonTreeEdges;
 	Graph tPrime = Graph::BFSTreeRooted(g, 0, &nonTreeEdges);
-	Graph gPrime(g);
-	gPrime.addVertex();
 	
+	Graph gPrime(g); // to keep aliases; optimize this
+	for(size_t i = 0; i < nonTreeEdges.size(); i++)
+		gPrime.addVertex();
 	for(size_t i = 0; i < tPrime.V(); i++)
 		gPrime.adj(i).clear();
+	
+	vector<size_t> N(gPrime.V(), 0);
+	vector<size_t> order(g.V(), -1);
+	size_t j = 0;
+	
+	order[eTour[0].first] = j++;
+	for(size_t i = 0; i < eTour.size(); i++) // todo: parallelize
+	{
+		if(order[eTour[i].second] == -1)
+			order[eTour[i].second] = j++;
+	}
+	
+	for(size_t i = 0; i < gPrime.V(); i++) // todo: parallelize
+	{
+		if(...)
+	}
 	
 	// first, all tree edges
 	for(size_t i = 0; i < tPrime.V(); i++)
 	{
 		for(set<size_t>::const_iterator j = tPrime.adj(i).begin(); j != tPrime.adj(i).end(); ++j)
 		{
-			if(*j < i)
-				gPrime.addEdge(i, g.V());
-			if(leastCommonAncestor(tPrime, i, *j) == 0)
+			if(order[*j] < order[i])
+				gPrime.addEdge(i, g.V() + nd[i] - 1);
+			if(leastCommonAncestor(tPrime, i, *j) == 0 && i != 0 && *j != 0)
 				gPrime.addEdge(i, *j);
 		}
 	}
@@ -242,29 +256,19 @@ set< set<size_t> > tarjanVishkin(const Graph &g)
 	set< pair<size_t, size_t> > nonTreeEdges;
 	Graph t = Graph::BFSTree(g, NULL, &nonTreeEdges);
 	
-	vector<Graph> forest = removeBridges(g, t, nonTreeEdges);
-	for(size_t i = 0; i < forest.size(); i++) // todo: parallelize this loop
+	vector< vector<size_t> > cPrime;
+	vector< pair<size_t, size_t> > eTour = eulerianTour(t);
+	
+	Graph gPrime = tarjanVishkinAuxiliaryGraph(g, eTour); // parallelize this function
+	Graph::BFSTree(gPrime, &cPrime);
+	
+	for(size_t j = 0; j < cPrime.size(); j++)
 	{
-		vector< vector<size_t> > cPrime;
-		Graph tPrime = Graph::BFSTree(forest[i]);
-		vector<size_t> eTour = eulerianTour(tPrime);
-		
-		cout << "=====" << endl;
-		for(size_t i = 0; i < eTour.size(); i++)
-			cout << eTour[i] << " ";
-		cout << endl;
-		
-		// Graph gPrime = tarjanVishkinAuxiliaryGraph(forest[i], eTour); // or parallelize this function?
-		// Graph::BFSTree(gPrime, &cPrime);
-		
-		for(size_t j = 0; j < cPrime.size(); j++)
-		{
-			set<size_t> component;
-			for(size_t k = 0; k < cPrime[j].size(); k++)
-				component.insert(g.vertex(cPrime[j][k]));
-			if(component.size() > 1)
-				components.insert(component);
-		}
+		set<size_t> component;
+		for(size_t k = 0; k < cPrime[j].size(); k++)
+			component.insert(g.vertex(cPrime[j][k]));
+		if(component.size() > 1)
+			components.insert(component);
 	}
 	
 	return components;
