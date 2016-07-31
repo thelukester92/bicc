@@ -7,59 +7,10 @@
 #include <tuple>
 #include <algorithm>
 #include <queue>
+#include "tarjan-vishkin.h"
 using namespace std;
 
-typedef pair<size_t, size_t> Edge;
-Edge reverseEdge(const Edge &e)
-{
-	return Edge(e.second, e.first);
-}
-
-class Graph
-{
-public:
-	void resize(size_t v)
-	{
-		for(size_t i = m_adj.size(); i < v; i++)
-			m_vertices.push_back(i == 0 ? 'a' : m_vertices.back() + 1);
-		m_adj.resize(v);
-	}
-	
-	void addVertex()					{ m_adj.push_back(list<size_t>()); m_vertices.push_back(m_adj.size() == 0 ? 'a' : m_vertices.back() + 1); }
-	void addEdge(size_t u, size_t v)	{ addDirectedEdge(u, v); addDirectedEdge(v, u); }
-	
-	// adds edge (u, v), keeping m_edges sorted lexicographically
-	void addDirectedEdge(size_t u, size_t v)
-	{
-		Edge e(u, v);
-		m_edges.insert(lower_bound(m_edges.begin(), m_edges.end(), e), e);
-		m_adj[u].push_back(v);
-	}
-	
-	list<size_t> &adj(size_t u)					{ return m_adj[u]; }
-	const list<size_t> &adj(size_t u) const		{ return m_adj[u]; }
-	const vector<Edge> &edges() const			{ return m_edges; }
-	char vertex(size_t u) const					{ return m_vertices[u]; }
-	size_t V() const							{ return m_adj.size(); }
-	size_t E() const							{ return m_edges.size(); }
-private:
-	vector< list<size_t> > m_adj;
-	vector<Edge> m_edges;
-	vector<char> m_vertices;
-};
-ostream &operator<<(ostream &out, const Graph &g)
-{
-	for(size_t i = 0; i < g.V(); i++)
-	{
-		cout << g.vertex(i) << ": ";
-		for(list<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
-			cout << g.vertex(*j) << " ";
-		cout << endl;
-	}
-	return out;
-}
-
-void spanningTree(const Graph &g, Graph &t, Graph &nt, vector<size_t> &parent, vector<size_t> &level)
+void TarjanVishkin::spanningTree()
 {
 	vector<bool> visited(g.V(), false), discovered(g.V(), false);
 	
@@ -103,7 +54,7 @@ void spanningTree(const Graph &g, Graph &t, Graph &nt, vector<size_t> &parent, v
 	}
 }
 
-void eulerTour(const Graph &t, vector<size_t> &succ)
+void TarjanVishkin::eulerTour()
 {
 	const vector<Edge> &edges = t.edges();
 	vector<size_t> first(t.V(), -1), next(edges.size(), -1), twin(edges.size(), -1);
@@ -127,7 +78,7 @@ void eulerTour(const Graph &t, vector<size_t> &succ)
 	}
 }
 
-void preorderVertices(const Graph &t, const vector<size_t> &succ, vector<size_t> &preorder)
+void TarjanVishkin::preorderVertices()
 {
 	preorder.resize(t.V(), -1);
 	preorder[t.edges()[0].first] = 0;
@@ -144,7 +95,7 @@ void preorderVertices(const Graph &t, const vector<size_t> &succ, vector<size_t>
 	while(i != 0);
 }
 
-void findLow(const Graph &t, const Graph &nt, const vector<size_t> &level, vector<size_t> &low)
+void TarjanVishkin::findLow()
 {
 	low.resize(nt.V());
 	for(size_t i = 0; i < nt.V(); i++) // parallelize
@@ -176,7 +127,7 @@ void findLow(const Graph &t, const Graph &nt, const vector<size_t> &level, vecto
 	}
 }
 
-void prefixSum(vector<size_t> &v)
+void TarjanVishkin::prefixSum(vector<size_t> &v)
 {
 	size_t sum = v[0];
 	for(size_t i = 1; i < v.size(); i++) // parallelize
@@ -186,7 +137,7 @@ void prefixSum(vector<size_t> &v)
 	}
 }
 
-size_t LCA(const vector<size_t> &parent, const vector<size_t> &level, size_t u, size_t v)
+size_t TarjanVishkin::LCA(size_t u, size_t v)
 {
 	size_t lu, lv;
 	while(u != v)
@@ -201,7 +152,7 @@ size_t LCA(const vector<size_t> &parent, const vector<size_t> &level, size_t u, 
 	return u;
 }
 
-void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vector<size_t> &parent, const vector<size_t> &level, const vector<size_t> &preorder, const vector<size_t> &low, Graph &gPrime)
+void TarjanVishkin::auxiliaryGraph()
 {
 	gPrime.resize(g.V() + nt.E() / 2);
 	vector<size_t> N(g.E(), 0);
@@ -233,7 +184,7 @@ void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vecto
 		}
 		else
 		{
-			size_t p = LCA(parent, level, u, v);
+			size_t p = LCA(u, v);
 			if(preorder[v] < preorder[u])
 				gPrime.addEdge(u, N[i] + g.V() - 1);
 			if(u < v && p != u && p != v)
@@ -243,11 +194,12 @@ void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vecto
 	}
 }
 
-void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
+
+void TarjanVishkin::connectedComponents()
 {
-	vector<bool> visited(g.V(), false), discovered(g.V(), false);
+	vector<bool> visited(gPrime.V(), false), discovered(gPrime.V(), false);
 	queue<size_t> q;
-	for(size_t i = 0; i < g.V(); i++)
+	for(size_t i = 0; i < gPrime.V(); i++)
 	{
 		if(!visited[i])
 		{
@@ -263,7 +215,7 @@ void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
 					continue;
 				visited[u] = true;
 				
-				for(list<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
+				for(list<size_t>::const_iterator j = gPrime.adj(u).begin(); j != gPrime.adj(u).end(); ++j)
 				{
 					if(!visited[*j] && !discovered[*j])
 					{
@@ -277,7 +229,7 @@ void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
 	}
 }
 
-void remapAuxiliaryGraph(const Graph &t, const Graph &nt, const vector<size_t> &parent, const vector< vector<size_t> > &components, vector< set<size_t> > &bicc)
+void TarjanVishkin::remapAuxiliaryGraph(vector< set<size_t> > &bicc)
 {
 	bicc.resize(components.size() - 1);
 	for(size_t i = 1; i < components.size(); i++)
@@ -294,46 +246,17 @@ void remapAuxiliaryGraph(const Graph &t, const Graph &nt, const vector<size_t> &
 	}
 }
 
-void TV(const Graph &g)
+// virtual
+void TarjanVishkin::getBiCC(const Graph &p_g, vector< set<size_t> > &bicc)
 {
-	Graph t, nt, gPrime;
-	vector<size_t> succ, parent, level, preorder, low;
-	vector< vector<size_t> > components;
-	vector< set<size_t> > bicc;
-	
-	spanningTree(g, t, nt, parent, level);
-	eulerTour(t, succ);
-	preorderVertices(t, succ, preorder);
-	findLow(t, nt, level, low);
-	auxiliaryGraph(g, t, nt, parent, level, preorder, low, gPrime);
-	connectedComponents(gPrime, components);
-	remapAuxiliaryGraph(t, nt, parent, components, bicc);
-	
-	cout << "Graph:\n" << g << endl;
-	cout << "MST:\n" << t << endl;
-	cout << "NTE:\n" << nt << endl;
-	cout << "Preorder:\n";
-	for(size_t i = 0; i < g.V(); i++)
-		cout << g.vertex(i) << ": " << preorder[i] << endl;
-	cout << endl;
-	cout << "Auxiliary:\n" << gPrime << endl;
-	cout << "Components:\n";
-	for(size_t i = 0; i < components.size(); i++)
-	{
-		cout << i << ": ";
-		for(size_t j = 0; j < components[i].size(); j++)
-			cout << components[i][j] << " ";
-		cout << endl;
-	}
-	cout << endl;
-	cout << "BiCC:\n";
-	for(size_t i = 0; i < bicc.size(); i++)
-	{
-		cout << i << ": ";
-		for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
-			cout << g.vertex(*j) << " ";
-		cout << endl;
-	}
+	g = p_g;
+	spanningTree();
+	eulerTour();
+	preorderVertices();
+	findLow();
+	auxiliaryGraph();
+	connectedComponents();
+	remapAuxiliaryGraph(bicc);
 }
 
 int main(int argc, char **argv)
@@ -365,7 +288,17 @@ int main(int argc, char **argv)
 	
 	fin.close();
 	
-	TV(g);
+	vector< set<size_t> > bicc;
+	TarjanVishkin tv;
+	tv.getBiCC(g, bicc);
+	
+	for(size_t i = 0; i < bicc.size(); i++)
+	{
+		cout << i << ": ";
+		for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
+			cout << g.vertex(*j) << " ";
+		cout << endl;
+	}
 	
 	return 0;
 }
