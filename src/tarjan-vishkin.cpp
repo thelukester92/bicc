@@ -284,16 +284,11 @@ void remapAuxiliaryGraph(const Graph &t, const Graph &nt, const vector<size_t> &
 	{
 		for(size_t j = 0; j < components[i].size(); j++)
 		{
+			// only consider tree edges (since non-tree edges include already-included vertices)
 			if(components[i][j] < t.V())
 			{
-				bicc[i].insert(j);
-				bicc[i].insert(parent[j]);
-			}
-			else
-			{
-				size_t u = nt.edges()[components[i][j] - t.V()].first, v = nt.edges()[components[i][j] - t.V()].second;
-				bicc[i].insert(u);
-				bicc[i].insert(v);
+				bicc[i].insert(components[i][j]);
+				bicc[i].insert(parent[components[i][j]]);
 			}
 		}
 	}
@@ -322,6 +317,15 @@ void TV(const Graph &g)
 		cout << g.vertex(i) << ": " << preorder[i] << endl;
 	cout << endl;
 	cout << "Auxiliary:\n" << gPrime << endl;
+	cout << "Components:\n";
+	for(size_t i = 0; i < components.size(); i++)
+	{
+		cout << i << ": ";
+		for(size_t j = 0; j < components[i].size(); j++)
+			cout << components[i][j] << " ";
+		cout << endl;
+	}
+	cout << endl;
 	cout << "BiCC:\n";
 	for(size_t i = 0; i < bicc.size(); i++)
 	{
