@@ -1,36 +1,73 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <list>
 #include <map>
+#include <tuple>
+#include <algorithm>
 #include <queue>
 using namespace std;
 
-struct Edge
+typedef pair<size_t, size_t> Edge;
+Edge reverseEdge(const Edge &e)
 {
-	explicit Edge(size_t u = -1, size_t v = -1, bool isTreeEdge = false) : u(u), v(v), isTreeEdge(isTreeEdge) {}
-	size_t u, v;
-	bool isTreeEdge;
-};
+	return Edge(e.second, e.first);
+}
 
 class Graph
 {
 public:
-	Graph(size_t V) : m_adj(V) {}
-	void addEdge(size_t u, size_t v)			{ m_adj[u].push_back(v); m_adj[v].push_back(u); }
-	vector<size_t> &adj(size_t u)				{ return m_adj[u]; }
-	const vector<size_t> &adj(size_t u) const	{ return m_adj[u]; }
+	void resize(size_t v)
+	{
+		for(size_t i = m_adj.size(); i < v; i++)
+			m_vertices.push_back(i == 0 ? 'a' : m_vertices.back() + 1);
+		m_adj.resize(v);
+	}
+	
+	void addVertex()					{ m_adj.push_back(list<size_t>()); m_vertices.push_back(m_adj.size() == 0 ? 'a' : m_vertices.back() + 1); }
+	void addEdge(size_t u, size_t v)	{ addDirectedEdge(u, v); addDirectedEdge(v, u); }
+	
+	// adds edge (u, v), keeping m_edges sorted lexicographically
+	void addDirectedEdge(size_t u, size_t v)
+	{
+		Edge e(u, v);
+		m_edges.insert(lower_bound(m_edges.begin(), m_edges.end(), e), e);
+		m_adj[u].push_back(v);
+	}
+	
+	list<size_t> &adj(size_t u)					{ return m_adj[u]; }
+	const list<size_t> &adj(size_t u) const		{ return m_adj[u]; }
+	const vector<Edge> &edges() const			{ return m_edges; }
+	char vertex(size_t u) const					{ return m_vertices[u]; }
 	size_t V() const							{ return m_adj.size(); }
+	size_t E() const							{ return m_edges.size(); }
 private:
-	vector< vector<size_t> > m_adj;
+	vector< list<size_t> > m_adj;
+	vector<Edge> m_edges;
+	vector<char> m_vertices;
 };
+ostream &operator<<(ostream &out, const Graph &g)
+{
+	for(size_t i = 0; i < g.V(); i++)
+	{
+		cout << g.vertex(i) << ": ";
+		for(list<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
+			cout << g.vertex(*j) << " ";
+		cout << endl;
+	}
+	return out;
+}
 
-void spanningTree(const Graph &g, vector<Edge> &edges)
+void spanningTree(const Graph &g, Graph &t, Graph &nt)
 {
 	vector<bool> visited(g.V(), false), discovered(g.V(), false);
-	queue<size_t> q;
 	
-	discovered[0] = true;
+	queue<size_t> q;
 	q.push(0);
+	discovered[0] = true;
+	
+	t.resize(g.V());
+	nt.resize(g.V());
 	
 	while(!q.empty())
 	{
@@ -41,119 +78,67 @@ void spanningTree(const Graph &g, vector<Edge> &edges)
 			continue;
 		visited[u] = true;
 		
-		for(size_t i = 0; i < g.adj(u).size(); i++)
+		for(list<size_t>::const_iterator i = g.adj(u).begin(); i != g.adj(u).end(); ++i)
 		{
-			size_t v = g.adj(u)[i];
+			size_t v = *i;
 			if(!visited[v])
 			{
 				if(!discovered[v])
 				{
 					discovered[v] = true;
 					q.push(v);
-					edges.push_back(Edge(u, v, true));
+					t.addEdge(u, v);
 				}
 				else
-					edges.push_back(Edge(u, v, false));
+					nt.addEdge(u, v);
 			}
 		}
 	}
 }
 
-void eulerTour(const Graph &g, const vector<Edge> &edges, vector<Edge> &tour)
+void eulerTour(const Graph &t, vector<size_t> &succ)
 {
-	// todo: order these lexicographically...
-	vector<Edge> directedEdges;
-	for(size_t i = 0; i < edges.size(); i++)
+	const vector<Edge> &edges = t.edges();
+	vector<size_t> first(t.V(), -1), next(edges.size(), -1), twin(edges.size(), -1);
+	
+	for(size_t i = 0; i < edges.size(); i++) // parallelizable
 	{
-		if(edges[i].isTreeEdge)
-		{
-			directedEdges.push_back(edges[i]);
-			directedEdges.push_back(Edge(edges[i].v, edges[i].u));
-		}
+		twin[distance(edges.begin(), lower_bound(edges.begin(), edges.end(), reverseEdge(edges[i])))] = i;
+		if(i == 0 || edges[i].first != edges[i-1].first)
+			first[edges[i].first] = i;
+		else if(edges[i].first == edges[i-1].first)
+			next[i-1] = i;
 	}
 	
-	vector<size_t> first(g.V(), -1), next(directedEdges.size(), -1), succ(directedEdges.size(), -1);
-	size_t e;
-	
-	size_t prev = -1;
-	for(size_t i = 0; i < directedEdges.size(); i++)
+	succ.resize(edges.size());
+	for(size_t i = 0; i < edges.size(); i++) // parallelizable
 	{
-		if(directedEdges[i].u != prev)
-		{
-			cout << "first[" << directedEdges[i].u << "] = " << i << endl;
-			first[directedEdges[i].u] = i;
-			e = i;
-		}
+		if(next[twin[i]] != -1)
+			succ[i] = next[twin[i]];
 		else
-		{
-			cout << "next[" << e << "] = " << i << endl;
-			next[e] = i;
-			e = i;
-		}
-		prev = directedEdges[i].u;
+			succ[i] = first[edges[i].second];
 	}
-	
-	cout << "-----" << endl;
-	for(size_t i = 0; i < directedEdges.size(); i++)
-	{
-		cout << directedEdges[i].u << ", " << directedEdges[i].v << " -> " << directedEdges[next[i]].u << ", " << directedEdges[next[i]].v << endl;
-		
-		size_t j = i % 2 == 0 ? i + 1 : i - 1;
-		if(next[j] != -1)
-			succ[i] = next[j];
-		else
-			succ[i] = first[directedEdges[j].u];
-	}
-	
-	tour.resize(succ.size());
-	e = first[0];
-	
-	for(size_t i = 0; i < tour.size(); i++)
-	{
-		tour[i] = directedEdges[e];
-		e = succ[e];
-	}
-}
-
-void preorder(const Graph &g, const vector<Edge> &tour, vector<size_t> &order)
-{
-	order.resize(g.V(), -1);
-	
-	size_t j = 0;
-	order[tour[0].u] = j++;
-	
-	for(size_t i = 0; i < tour.size(); i++)
-		if(order[tour[i].v] == -1)
-			order[tour[i].v] = j++;
-}
-
-void aux(const Graph &g, const vector<Edge> &t, const vector<Edge> &nt, const vector<size_t> &order, Graph &gp)
-{
-	
 }
 
 void TV(const Graph &g)
 {
-	vector<Edge> edges, tour;
-	vector<size_t> order;
+	Graph t, nt;
+	vector<size_t> succ;
 	
-	spanningTree(g, edges);
-	eulerTour(g, edges, tour);
-	preorder(g, tour, order);
+	spanningTree(g, t, nt);
+	eulerTour(t, succ);
 	
-	cout << "=====" << endl;
-	for(size_t i = 0; i < tour.size(); i++)
-		cout << i << ": " << tour[i].u << ", " << tour[i].v << endl;
-	
-	cout << "=====" << endl;
-	for(size_t i = 0; i < order.size(); i++)
-		cout << i << ": " << order[i] << endl;
-	
-	// aux(g, t, nt, order, gp);
-	
-	/*
-	c = components(gp);
-	*/
+	cout << "Graph:\n" << g << endl;
+	cout << "MST:\n" << t << endl;
+	cout << "NTE:\n" << nt << endl;
+	cout << "Tour:\n";
+	size_t i = 0;
+	do
+	{
+		cout << t.vertex(t.edges()[i].first) << ", " << t.vertex(t.edges()[i].second) << endl;
+		i = succ[i];
+	}
+	while(i != 0);
 }
 
 int main(int argc, char **argv)
@@ -167,22 +152,23 @@ int main(int argc, char **argv)
 	ifstream fin;
 	fin.open(argv[1]);
 	
-	size_t v;
-	fin >> v;
+	Graph g;
+	size_t V, E;
+	fin >> V;
+	g.resize(V);
 	
-	Graph g(v);
-	
-	for(size_t i = 0; i < v; i++)
+	for(size_t u = 0; u < V; u++)
 	{
-		size_t e;
-		fin >> e;
-		for(size_t j = 0; j < e; j++)
+		fin >> E;
+		for(size_t i = 0; i < E; i++)
 		{
 			size_t v;
 			fin >> v;
-			g.addEdge(i, v);
+			g.addEdge(u, v);
 		}
 	}
+	
+	fin.close();
 	
 	TV(g);
 	
