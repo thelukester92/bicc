@@ -58,7 +58,7 @@ ostream &operator<<(ostream &out, const Graph &g)
 	return out;
 }
 
-void spanningTree(const Graph &g, Graph &t, Graph &nt)
+void spanningTree(const Graph &g, Graph &t, Graph &nt, vector<size_t> &parent, vector<size_t> &level)
 {
 	vector<bool> visited(g.V(), false), discovered(g.V(), false);
 	
@@ -68,6 +68,10 @@ void spanningTree(const Graph &g, Graph &t, Graph &nt)
 	
 	t.resize(g.V());
 	nt.resize(g.V());
+	parent.resize(g.V());
+	level.resize(g.V());
+	parent[0] = 0;
+	level[0] = 0;
 	
 	while(!q.empty())
 	{
@@ -88,6 +92,8 @@ void spanningTree(const Graph &g, Graph &t, Graph &nt)
 					discovered[v] = true;
 					q.push(v);
 					t.addEdge(u, v);
+					parent[v] = u;
+					level[v] = level[u] + 1;
 				}
 				else
 					nt.addEdge(u, v);
@@ -137,14 +143,150 @@ void preorderVertices(const Graph &t, const vector<size_t> &succ, vector<size_t>
 	while(i != 0);
 }
 
+void findLow(const Graph &t, const Graph &nt, const vector<size_t> &level, vector<size_t> &low)
+{
+	low.resize(nt.V());
+	for(size_t i = 0; i < nt.V(); i++) // parallelize
+		low[i] = i;
+	
+	bool changed = true;
+	while(changed)
+	{
+		changed = false;
+		for(size_t i = 0; i < nt.V(); i++)
+		{
+			for(list<size_t>::const_iterator j = t.adj(i).begin(); j != t.adj(i).end(); ++j)
+			{
+				if(level[i] < level[*j] && low[*j] < low[i])
+				{
+					low[i] = low[*j];
+					changed = true;
+				}
+			}
+			for(list<size_t>::const_iterator j = nt.adj(i).begin(); j != nt.adj(i).end(); ++j)
+			{
+				if(low[*j] < low[i])
+				{
+					low[i] = low[*j];
+					changed = true;
+				}
+			}
+		}
+	}
+}
+
+void prefixSum(vector<size_t> &v)
+{
+	size_t sum = v[0];
+	for(size_t i = 1; i < v.size(); i++) // parallelize
+	{
+		sum += v[i];
+		v[i] = sum;
+	}
+}
+
+size_t LCA(const vector<size_t> &parent, const vector<size_t> &level, size_t u, size_t v)
+{
+	size_t lu, lv;
+	while(u != v)
+	{
+		lu = level[u];
+		lv = level[v];
+		if(lu >= lv)
+			u = parent[u];
+		if(lv >= lu)
+			v = parent[v];
+	}
+	return u;
+}
+
+void auxiliaryGraph(const Graph &g, const Graph &t, const Graph &nt, const vector<size_t> &parent, const vector<size_t> &level, const vector<size_t> &preorder, const vector<size_t> &low, Graph &gPrime)
+{
+	gPrime.resize(g.V() + nt.E() / 2);
+	vector<size_t> N(g.E(), 0);
+	
+	size_t ti = 0, nti = 0;
+	for(size_t i = 0; i < g.E(); i++) // to parallelize, need a vector<bool> isTreeEdge
+	{
+		if(nti >= nt.E() || g.edges()[i] == t.edges()[ti])
+			ti++;
+		else
+		{
+			if(g.edges()[i].first < g.edges()[i].second)
+				N[i] = 1;
+			nti++;
+		}
+	}
+	
+	prefixSum(N);
+	
+	ti = 0, nti = 0;
+	for(size_t i = 0; i < g.E(); i++) // to parallelize, need a vector<bool> isTreeEdge
+	{
+		size_t u = g.edges()[i].first, v = g.edges()[i].second;
+		if(nti >= nt.edges().size() || g.edges()[i] == t.edges()[ti])
+		{
+			if(preorder[u] < preorder[v] && low[v] < preorder[u])
+				gPrime.addEdge(u, v);
+			ti++;
+		}
+		else
+		{
+			if(preorder[v] < preorder[u])
+				gPrime.addEdge(u, N[i] + g.V() - 1);
+			if(LCA(parent, level, u, v) != u && LCA(parent, level, u, v) != v)
+				gPrime.addEdge(u, v);
+			nti++;
+		}
+	}
+}
+
+void connectedComponents(const Graph &g, vector< vector<size_t> > &components)
+{
+	vector<bool> visited(g.V(), false), discovered(g.V(), false);
+	queue<size_t> q;
+	for(size_t i = 0; i < g.V(); i++)
+	{
+		if(!visited[i])
+		{
+			components.push_back(vector<size_t>(1, i));
+			q.push(i);
+			discovered[i] = true;
+			while(!q.empty())
+			{
+				size_t u = q.front();
+				q.pop();
+				
+				if(visited[u])
+					continue;
+				visited[u] = true;
+				
+				for(list<size_t>::const_iterator j = g.adj(u).begin(); j != g.adj(u).end(); ++j)
+				{
+					if(!visited[*j] && !discovered[*j])
+					{
+						discovered[*j] = true;
+						q.push(*j);
+						components.back().push_back(*j);
+					}
+				}
+			}
+		}
+	}
+}
+
 void TV(const Graph &g)
 {
 	Graph t, nt, gPrime;
-	vector<size_t> succ, preorder;
+	vector<size_t> succ, parent, level, preorder, low;
+	vector< vector<size_t> > components;
 	
-	spanningTree(g, t, nt);
+	spanningTree(g, t, nt, parent, level);
 	eulerTour(t, succ);
 	preorderVertices(t, succ, preorder);
+	findLow(t, nt, level, low);
+	auxiliaryGraph(g, t, nt, parent, level, preorder, low, gPrime);
+	connectedComponents(gPrime, components);
 	
 	cout << "Graph:\n" << g << endl;
 	cout << "MST:\n" << t << endl;
@@ -152,6 +294,16 @@ void TV(const Graph &g)
 	cout << "Preorder:\n";
 	for(size_t i = 0; i < g.V(); i++)
 		cout << g.vertex(i) << ": " << preorder[i] << endl;
+	cout << endl;
+	cout << "Auxiliary:\n" << gPrime << endl;
+	cout << "Components:\n";
+	for(size_t i = 0; i < components.size(); i++)
+	{
+		cout << i << ": ";
+		for(size_t j = 0; j < components[i].size(); j++)
+			cout << components[i][j] << " ";
+		cout << endl;
+	}
 }
 
 int main(int argc, char **argv)
