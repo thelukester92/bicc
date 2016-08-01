@@ -12,7 +12,6 @@ private:
 	void eulerTour();
 	void preorderVertices();
 	void findLow();
-	void prefixSum(std::vector<size_t> &v);
 	void auxiliaryGraph(const Graph &g);
 	void remapAuxiliaryGraph(std::vector< std::set<size_t> > &bicc);
 	

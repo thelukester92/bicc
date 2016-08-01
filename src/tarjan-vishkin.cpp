@@ -82,16 +82,6 @@ void TarjanVishkin::findLow()
 	}
 }
 
-void TarjanVishkin::prefixSum(vector<size_t> &v)
-{
-	size_t sum = v[0];
-	for(size_t i = 1; i < v.size(); i++) // parallelize
-	{
-		sum += v[i];
-		v[i] = sum;
-	}
-}
-
 void TarjanVishkin::auxiliaryGraph(const Graph &g)
 {
 	gPrime.resize(g.V() + nt.E() / 2);

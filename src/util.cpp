@@ -32,3 +32,13 @@ size_t LCA(vector<size_t> &parent, vector<size_t> &level, size_t u, size_t v)
 	}
 	return u;
 }
+
+void prefixSum(vector<size_t> &v)
+{
+	size_t sum = v[0];
+	for(size_t i = 1; i < v.size(); i++) // parallelize
+	{
+		sum += v[i];
+		v[i] = sum;
+	}
+}
