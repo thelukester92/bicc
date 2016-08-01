@@ -64,7 +64,7 @@ size_t Graph::E() const
 	return m_edges.size();
 }
 
-void Graph::spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::vector<size_t> &level) const
+void Graph::spanningTree(Graph *t, Graph *nt, vector<size_t> *parent, vector<size_t> *level, vector< vector<size_t> > *components) const;
 {
 	vector<bool> visited(V(), false), discovered(V(), false);
 	
@@ -72,53 +72,31 @@ void Graph::spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::
 	q.push(0);
 	discovered[0] = true;
 	
-	t.resize(V());
-	nt.resize(V());
-	parent.resize(V());
-	level.resize(V());
-	parent[0] = 0;
-	level[0] = 0;
+	if(t)
+		t->resize(V());
+	if(nt)
+		nt->resize(V());
 	
-	while(!q.empty())
-	{
-		size_t u = q.front();
-		q.pop();
-		
-		if(visited[u])
-			continue;
-		visited[u] = true;
-		
-		for(list<size_t>::const_iterator i = adj(u).begin(); i != adj(u).end(); ++i)
-		{
-			size_t v = *i;
-			if(!visited[v])
-			{
-				if(!discovered[v])
-				{
-					discovered[v] = true;
-					q.push(v);
-					t.addEdge(u, v);
-					parent[v] = u;
-					level[v] = level[u] + 1;
-				}
-				else
-					nt.addEdge(u, v);
-			}
-		}
-	}
-}
-
-void Graph::connectedComponents(std::vector< std::vector<size_t> > &components) const
-{
-	vector<bool> visited(V(), false), discovered(V(), false);
-	queue<size_t> q;
 	for(size_t i = 0; i < V(); i++)
 	{
 		if(!visited[i])
 		{
-			components.push_back(vector<size_t>(1, i));
 			q.push(i);
 			discovered[i] = true;
+			
+			if(parent)
+			{
+				parent->resize(V());
+				(*parent)[i] = i;
+			}
+			if(level)
+			{
+				level->resize(V());
+				(*level)[i] = i;
+			}
+			if(components)
+				components->push_back(vector<size_t>(1, i));
+			
 			while(!q.empty())
 			{
 				size_t u = q.front();
@@ -130,11 +108,25 @@ void Graph::connectedComponents(std::vector< std::vector<size_t> > &components) 
 				
 				for(list<size_t>::const_iterator j = adj(u).begin(); j != adj(u).end(); ++j)
 				{
-					if(!visited[*j] && !discovered[*j])
+					size_t v = *j;
+					if(!visited[v])
 					{
-						discovered[*j] = true;
-						q.push(*j);
-						components.back().push_back(*j);
+						if(!discovered[v])
+						{
+							discovered[v] = true;
+							q.push(v);
+							
+							if(t)
+								t->addEdge(u, v);
+							if(parent)
+								(*parent)[v] = u;
+							if(level)
+								(*level)[v] = (*level)[u] + 1;
+							if(components)
+								components->back().push_back(*j);
+						}
+						else if(nt)
+							nt->addEdge(u, v);
 					}
 				}
 			}

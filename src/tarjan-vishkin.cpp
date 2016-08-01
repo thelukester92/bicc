@@ -174,11 +174,11 @@ const char *TarjanVishkin::name()
 // virtual
 void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 {
-	g.spanningTree(t, nt, parent, level);
+	g.spanningTree(&t, &nt, &parent, &level);
 	eulerTour();
 	preorderVertices();
 	findLow();
 	auxiliaryGraph(g);
-	gPrime.connectedComponents(components);
+	gPrime.spanningTree(NULL, NULL, NULL, NULL, components);
 	remapAuxiliaryGraph(bicc);
 }
