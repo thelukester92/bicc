@@ -21,6 +21,8 @@ public:
 	char vertex(size_t u) const;
 	size_t V() const;
 	size_t E() const;
+	
+	void spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::vector<size_t> &level) const;
 private:
 	std::vector< std::list<size_t> > m_adj;
 	std::vector<Edge> m_edges;

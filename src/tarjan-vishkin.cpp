@@ -8,50 +8,6 @@
 #include "tarjan-vishkin.h"
 using namespace std;
 
-void TarjanVishkin::spanningTree(const Graph &g)
-{
-	vector<bool> visited(g.V(), false), discovered(g.V(), false);
-	
-	queue<size_t> q;
-	q.push(0);
-	discovered[0] = true;
-	
-	t.resize(g.V());
-	nt.resize(g.V());
-	parent.resize(g.V());
-	level.resize(g.V());
-	parent[0] = 0;
-	level[0] = 0;
-	
-	while(!q.empty())
-	{
-		size_t u = q.front();
-		q.pop();
-		
-		if(visited[u])
-			continue;
-		visited[u] = true;
-		
-		for(list<size_t>::const_iterator i = g.adj(u).begin(); i != g.adj(u).end(); ++i)
-		{
-			size_t v = *i;
-			if(!visited[v])
-			{
-				if(!discovered[v])
-				{
-					discovered[v] = true;
-					q.push(v);
-					t.addEdge(u, v);
-					parent[v] = u;
-					level[v] = level[u] + 1;
-				}
-				else
-					nt.addEdge(u, v);
-			}
-		}
-	}
-}
-
 void TarjanVishkin::eulerTour()
 {
 	const vector<Edge> &edges = t.edges();
@@ -253,7 +209,7 @@ const char *TarjanVishkin::name()
 // virtual
 void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 {
-	spanningTree(g);
+	g.spanningTree(t, nt, parent, level);
 	eulerTour();
 	preorderVertices();
 	findLow();

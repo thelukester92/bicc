@@ -1,4 +1,5 @@
 #include "graph.h"
+#include <queue>
 using namespace std;
 
 Edge reverseEdge(const Edge &e)
@@ -61,6 +62,50 @@ size_t Graph::V() const
 size_t Graph::E() const
 {
 	return m_edges.size();
+}
+
+void Graph::spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::vector<size_t> &level) const
+{
+	vector<bool> visited(V(), false), discovered(V(), false);
+	
+	queue<size_t> q;
+	q.push(0);
+	discovered[0] = true;
+	
+	t.resize(V());
+	nt.resize(V());
+	parent.resize(V());
+	level.resize(V());
+	parent[0] = 0;
+	level[0] = 0;
+	
+	while(!q.empty())
+	{
+		size_t u = q.front();
+		q.pop();
+		
+		if(visited[u])
+			continue;
+		visited[u] = true;
+		
+		for(list<size_t>::const_iterator i = adj(u).begin(); i != adj(u).end(); ++i)
+		{
+			size_t v = *i;
+			if(!visited[v])
+			{
+				if(!discovered[v])
+				{
+					discovered[v] = true;
+					q.push(v);
+					t.addEdge(u, v);
+					parent[v] = u;
+					level[v] = level[u] + 1;
+				}
+				else
+					nt.addEdge(u, v);
+			}
+		}
+	}
 }
 
 ostream &operator<<(ostream &out, const Graph &g)
