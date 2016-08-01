@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <queue>
 #include "tarjan-vishkin.h"
+#include "util.h"
 using namespace std;
 
 void TarjanVishkin::eulerTour()
