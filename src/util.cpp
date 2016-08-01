@@ -5,9 +5,9 @@ ostream &operator<<(ostream &out, const Graph &g)
 {
 	for(size_t i = 0; i < g.V(); i++)
 	{
-		cout << g.vertex(i) << ": ";
+		cout << char('a' + i) << ": ";
 		for(list<size_t>::const_iterator j = g.adj(i).begin(); j != g.adj(i).end(); ++j)
-			cout << g.vertex(*j) << " ";
+			cout << char('a' + *j) << " ";
 		cout << endl;
 	}
 	return out;

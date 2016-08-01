@@ -4,15 +4,12 @@ using namespace std;
 
 void Graph::resize(size_t v)
 {
-	for(size_t i = m_adj.size(); i < v; i++)
-		m_vertices.push_back(i == 0 ? 'a' : m_vertices.back() + 1);
 	m_adj.resize(v);
 }
 
 void Graph::addVertex()
 {
 	m_adj.push_back(list<size_t>());
-	m_vertices.push_back(m_adj.size() == 0 ? 'a' : m_vertices.back() + 1);
 }
 
 void Graph::addEdge(size_t u, size_t v)
@@ -72,11 +69,6 @@ const list<size_t> &Graph::adj(size_t u) const
 const vector<Edge> &Graph::edges() const
 {
 	return m_edges;
-}
-
-char Graph::vertex(size_t u) const
-{
-	return m_vertices[u];
 }
 
 size_t Graph::V() const

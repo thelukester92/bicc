@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		{
 			cout << i << ": ";
 			for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
-				cout << g.vertex(*j) << " ";
+				cout << char('a' + *j) << " ";
 			cout << endl;
 		}
 		

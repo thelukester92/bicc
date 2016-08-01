@@ -21,7 +21,6 @@ public:
 	std::list<size_t> &adj(size_t u);
 	const std::list<size_t> &adj(size_t u) const;
 	const std::vector<Edge> &edges() const;
-	char vertex(size_t u) const;
 	size_t V() const;
 	size_t E() const;
 	
@@ -30,7 +29,6 @@ public:
 private:
 	std::vector< std::list<size_t> > m_adj;
 	std::vector<Edge> m_edges;
-	std::vector<char> m_vertices;
 };
 
 #endif
