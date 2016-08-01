@@ -29,6 +29,19 @@ void Graph::addDirectedEdge(size_t u, size_t v)
 	m_adj[u].push_back(v);
 }
 
+void Graph::removeEdge(size_t u, size_t v)
+{
+	removeDirectedEdge(u, v);
+	removeDirectedEdge(v, u);
+}
+
+void Graph::removeDirectedEdge(size_t u, size_t v)
+{
+	Edge e(u, v);
+	m_edges.erase(lower_bound(m_edges.begin(), m_edges.end(), e));
+	m_adj[u].erase(find(m_adj[u].begin(), m_adj[u].end(), v));
+}
+
 list<size_t> &Graph::adj(size_t u)
 {
 	return m_adj[u];

@@ -9,6 +9,24 @@
 #include "util.h"
 using namespace std;
 
+// virtual
+const char *TarjanVishkin::name()
+{
+	return "Tarjan-Vishkin";
+}
+
+// virtual
+void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
+{
+	g.spanningTree(&t, &nt, &parent, &level);
+	eulerTour();
+	preorderVertices();
+	findLow();
+	auxiliaryGraph(g);
+	gPrime.spanningTree(NULL, NULL, NULL, NULL, &components);
+	remapAuxiliaryGraph(bicc);
+}
+
 void TarjanVishkin::eulerTour()
 {
 	const vector<Edge> &edges = t.edges();
@@ -139,22 +157,4 @@ void TarjanVishkin::remapAuxiliaryGraph(vector< set<size_t> > &bicc)
 			}
 		}
 	}
-}
-
-// virtual
-const char *TarjanVishkin::name()
-{
-	return "Tarjan-Vishkin";
-}
-
-// virtual
-void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
-{
-	g.spanningTree(&t, &nt, &parent, &level);
-	eulerTour();
-	preorderVertices();
-	findLow();
-	auxiliaryGraph(g);
-	gPrime.spanningTree(NULL, NULL, NULL, NULL, &components);
-	remapAuxiliaryGraph(bicc);
 }

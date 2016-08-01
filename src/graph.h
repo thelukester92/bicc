@@ -14,6 +14,8 @@ public:
 	void addVertex();
 	void addEdge(size_t u, size_t v);
 	void addDirectedEdge(size_t u, size_t v);
+	void removeEdge(size_t u, size_t v);
+	void removeDirectedEdge(size_t u, size_t v);
 	std::list<size_t> &adj(size_t u);
 	const std::list<size_t> &adj(size_t u) const;
 	const std::vector<Edge> &edges() const;
