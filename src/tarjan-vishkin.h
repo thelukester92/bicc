@@ -15,7 +15,6 @@ private:
 	void prefixSum(std::vector<size_t> &v);
 	size_t LCA(size_t u, size_t v);
 	void auxiliaryGraph(const Graph &g);
-	void connectedComponents();
 	void remapAuxiliaryGraph(std::vector< std::set<size_t> > &bicc);
 	
 	Graph t, nt, gPrime;

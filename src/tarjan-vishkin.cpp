@@ -148,41 +148,6 @@ void TarjanVishkin::auxiliaryGraph(const Graph &g)
 	}
 }
 
-
-void TarjanVishkin::connectedComponents()
-{
-	vector<bool> visited(gPrime.V(), false), discovered(gPrime.V(), false);
-	queue<size_t> q;
-	for(size_t i = 0; i < gPrime.V(); i++)
-	{
-		if(!visited[i])
-		{
-			components.push_back(vector<size_t>(1, i));
-			q.push(i);
-			discovered[i] = true;
-			while(!q.empty())
-			{
-				size_t u = q.front();
-				q.pop();
-				
-				if(visited[u])
-					continue;
-				visited[u] = true;
-				
-				for(list<size_t>::const_iterator j = gPrime.adj(u).begin(); j != gPrime.adj(u).end(); ++j)
-				{
-					if(!visited[*j] && !discovered[*j])
-					{
-						discovered[*j] = true;
-						q.push(*j);
-						components.back().push_back(*j);
-					}
-				}
-			}
-		}
-	}
-}
-
 void TarjanVishkin::remapAuxiliaryGraph(vector< set<size_t> > &bicc)
 {
 	bicc.resize(components.size() - 1);
@@ -214,6 +179,6 @@ void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	preorderVertices();
 	findLow();
 	auxiliaryGraph(g);
-	connectedComponents();
+	gPrime.connectedComponents(components);
 	remapAuxiliaryGraph(bicc);
 }

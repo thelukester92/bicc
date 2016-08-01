@@ -23,6 +23,7 @@ public:
 	size_t E() const;
 	
 	void spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::vector<size_t> &level) const;
+	void connectedComponents(std::vector< std::vector<size_t> > &components) const;
 private:
 	std::vector< std::list<size_t> > m_adj;
 	std::vector<Edge> m_edges;

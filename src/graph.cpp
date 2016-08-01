@@ -108,6 +108,40 @@ void Graph::spanningTree(Graph &t, Graph &nt, std::vector<size_t> &parent, std::
 	}
 }
 
+void Graph::connectedComponents(std::vector< std::vector<size_t> > &components) const
+{
+	vector<bool> visited(V(), false), discovered(V(), false);
+	queue<size_t> q;
+	for(size_t i = 0; i < V(); i++)
+	{
+		if(!visited[i])
+		{
+			components.push_back(vector<size_t>(1, i));
+			q.push(i);
+			discovered[i] = true;
+			while(!q.empty())
+			{
+				size_t u = q.front();
+				q.pop();
+				
+				if(visited[u])
+					continue;
+				visited[u] = true;
+				
+				for(list<size_t>::const_iterator j = adj(u).begin(); j != adj(u).end(); ++j)
+				{
+					if(!visited[*j] && !discovered[*j])
+					{
+						discovered[*j] = true;
+						q.push(*j);
+						components.back().push_back(*j);
+					}
+				}
+			}
+		}
+	}
+}
+
 ostream &operator<<(ostream &out, const Graph &g)
 {
 	for(size_t i = 0; i < g.V(); i++)
