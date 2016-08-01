@@ -64,7 +64,7 @@ size_t Graph::E() const
 	return m_edges.size();
 }
 
-void Graph::spanningTree(Graph *t, Graph *nt, vector<size_t> *parent, vector<size_t> *level, vector< vector<size_t> > *components) const;
+void Graph::spanningTree(Graph *t, Graph *nt, vector<size_t> *parent, vector<size_t> *level, vector< vector<size_t> > *components) const
 {
 	vector<bool> visited(V(), false), discovered(V(), false);
 	

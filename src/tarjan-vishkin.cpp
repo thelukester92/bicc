@@ -179,6 +179,6 @@ void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	preorderVertices();
 	findLow();
 	auxiliaryGraph(g);
-	gPrime.spanningTree(NULL, NULL, NULL, NULL, components);
+	gPrime.spanningTree(NULL, NULL, NULL, NULL, &components);
 	remapAuxiliaryGraph(bicc);
 }
