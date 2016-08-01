@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include "tarjan-vishkin.h"
+#include "chaitanya-kothapalli.h"
 using namespace std;
 
 int main(int argc, char **argv)
@@ -34,16 +35,28 @@ int main(int argc, char **argv)
 	
 	fin.close();
 	
-	vector< set<size_t> > bicc;
-	TarjanVishkin tv;
-	tv.getBiCC(g, bicc);
+	vector<BiCC *> algorithms;
+	algorithms.push_back(new TarjanVishkin());
+	algorithms.push_back(new ChaitanyaKothapalli());
 	
-	for(size_t i = 0; i < bicc.size(); i++)
+	for(size_t i = 0; i < algorithms.size(); i++)
 	{
-		cout << i << ": ";
-		for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
-			cout << g.vertex(*j) << " ";
-		cout << endl;
+		cout << "===== " << algorithms[i]->name() << " =====" << endl;
+		
+		vector< set<size_t> > bicc;
+		algorithms[i]->getBiCC(g, bicc);
+		
+		cout << "Found " << bicc.size() << " biconnected components!" << endl;
+		
+		for(size_t i = 0; i < bicc.size(); i++)
+		{
+			cout << i << ": ";
+			for(set<size_t>::iterator j = bicc[i].begin(); j != bicc[i].end(); ++j)
+				cout << g.vertex(*j) << " ";
+			cout << endl;
+		}
+		
+		delete algorithms[i];
 	}
 	
 	return 0;

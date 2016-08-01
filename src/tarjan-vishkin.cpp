@@ -245,6 +245,12 @@ void TarjanVishkin::remapAuxiliaryGraph(vector< set<size_t> > &bicc)
 }
 
 // virtual
+const char *TarjanVishkin::name()
+{
+	return "Tarjan-Vishkin";
+}
+
+// virtual
 void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 {
 	spanningTree(g);
