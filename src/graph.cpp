@@ -89,6 +89,27 @@ size_t Graph::E() const
 	return m_edges.size();
 }
 
+void Graph::copyComponent(const Graph &g, const vector<size_t> &component, vector<size_t> &antiAlias, vector<size_t> &alias)
+{
+	resize(component.size());
+	antiAlias.resize(g.V(), -1);
+	alias.resize(component.size());
+	for(size_t i = 0; i < component.size(); i++)
+	{
+		antiAlias[component[i]] = i;
+		alias[i] = component[i];
+	}
+	for(size_t u = 0; u < component.size(); u++)
+	{
+		for(list<size_t>::const_iterator j = g.adj(component[u]).begin(); j != g.adj(component[u]).end(); ++j)
+		{
+			size_t v = antiAlias[*j];
+			if(v != -1)
+				addDirectedEdge(u, v);
+		}
+	}
+}
+
 void Graph::spanningTree(Graph *t, Graph *nt, vector<size_t> *parent, vector<size_t> *level, vector< vector<size_t> > *components) const
 {
 	vector<bool> visited(V(), false), discovered(V(), false);

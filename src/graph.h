@@ -25,6 +25,7 @@ public:
 	size_t V() const;
 	size_t E() const;
 	
+	void copyComponent(const Graph &g, const std::vector<size_t> &component, std::vector<size_t> &antiAlias, std::vector<size_t> &alias);
 	void spanningTree(Graph *t = NULL, Graph *nt = NULL, std::vector<size_t> *parent = NULL, std::vector<size_t> *level = NULL, std::vector< std::vector<size_t> > *components = NULL) const;
 private:
 	std::vector< std::list<size_t> > m_adj;

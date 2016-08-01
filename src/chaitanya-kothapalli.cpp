@@ -32,12 +32,7 @@ void ChaitanyaKothapalli::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 		{
 			set<size_t> component;
 			for(size_t k = 0; k < componentsPrime[j].size(); k++)
-			{
-				if(componentsPrime[j][k] < g.V())
-					component.insert(componentsPrime[j][k]);
-				else
-					component.insert(alias[componentsPrime[j][k] - g.V()]);
-			}
+				component.insert(alias[componentsPrime[j][k]]);
 			if(component.size() > 1)
 				bicc.push_back(component);
 		}
@@ -80,7 +75,8 @@ void ChaitanyaKothapalli::removeBridges(const Graph &g, const Graph &t, const Gr
 
 void ChaitanyaKothapalli::auxiliaryGraph(const Graph &g, const Graph &nt, const vector<size_t> &parent, const vector<size_t> &level, const vector<size_t> &component, Graph &aux, vector<size_t> &alias)
 {
-	aux = g;
+	vector<size_t> antiAlias;
+	aux.copyComponent(g, component, antiAlias, alias);
 	for(size_t i = 0; i < component.size(); i++)
 	{
 		size_t u = component[i];
@@ -91,6 +87,7 @@ void ChaitanyaKothapalli::auxiliaryGraph(const Graph &g, const Graph &nt, const 
 			{
 				size_t x = LCA(parent, level, u, v, &a, &b), xPrime = aux.V();
 				alias.push_back(x);
+				x = antiAlias[x], a = antiAlias[a], b = antiAlias[b];
 				aux.removeEdgeSafe(x, a);
 				aux.removeEdgeSafe(x, b);
 				aux.addVertex();
