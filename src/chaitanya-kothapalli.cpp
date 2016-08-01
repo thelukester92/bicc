@@ -14,9 +14,10 @@ void ChaitanyaKothapalli::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	Graph t, nt;
 	vector<size_t> parent, level;
 	vector< vector<size_t> > components;
+	vector<Edge> bridges;
 	
 	g.spanningTree(&t, &nt, &parent, &level);
-	removeBridges(g, t, nt, parent, level, components);
+	removeBridges(g, t, nt, parent, level, components, &bridges);
 	
 	for(size_t i = 0; i < components.size(); i++) // parallelize
 	{
@@ -37,9 +38,16 @@ void ChaitanyaKothapalli::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 				bicc.push_back(component);
 		}
 	}
+	
+	for(size_t i = 0; i < bridges.size(); i++)
+	{
+		bicc.push_back(set<size_t>());
+		bicc.back().insert(bridges[i].first);
+		bicc.back().insert(bridges[i].second);
+	}
 }
 
-void ChaitanyaKothapalli::removeBridges(const Graph &g, const Graph &t, const Graph &nt, vector<size_t> &parent, vector<size_t> &level, vector< vector<size_t> > &components)
+void ChaitanyaKothapalli::removeBridges(const Graph &g, const Graph &t, const Graph &nt, vector<size_t> &parent, vector<size_t> &level, vector< vector<size_t> > &components, vector<Edge> *bridges)
 {
 	Graph gPrime(g);
 	
@@ -67,8 +75,14 @@ void ChaitanyaKothapalli::removeBridges(const Graph &g, const Graph &t, const Gr
 	}
 	
 	for(size_t i = 1; i < g.V(); i++)
+	{
 		if(!marked[i])
+		{
 			gPrime.removeEdgeSafe(i, parent[i]);
+			if(bridges)
+				bridges->push_back(Edge(i, parent[i]));
+		}
+	}
 	
 	gPrime.spanningTree(NULL, NULL, NULL, NULL, &components);
 }
