@@ -18,11 +18,13 @@ Edge reverseEdge(const Edge &e)
 	return Edge(e.second, e.first);
 }
 
-size_t LCA(vector<size_t> &parent, vector<size_t> &level, size_t u, size_t v)
+size_t LCA(const vector<size_t> &parent, const vector<size_t> &level, size_t u, size_t v, size_t *a, size_t *b)
 {
 	size_t lu, lv;
 	while(u != v)
 	{
+		if(a) *a = u;
+		if(b) *b = v;
 		lu = level[u];
 		lv = level[v];
 		if(lu >= lv)

@@ -42,6 +42,23 @@ void Graph::removeDirectedEdge(size_t u, size_t v)
 	m_adj[u].erase(find(m_adj[u].begin(), m_adj[u].end(), v));
 }
 
+void Graph::removeEdgeSafe(size_t u, size_t v)
+{
+	removeDirectedEdgeSafe(u, v);
+	removeDirectedEdgeSafe(v, u);
+}
+
+void Graph::removeDirectedEdgeSafe(size_t u, size_t v)
+{
+	Edge e(u, v);
+	vector<Edge>::iterator i = find(m_edges.begin(), m_edges.end(), e);
+	if(i != m_edges.end())
+	{
+		m_edges.erase(i);
+		m_adj[u].erase(find(m_adj[u].begin(), m_adj[u].end(), v));
+	}
+}
+
 list<size_t> &Graph::adj(size_t u)
 {
 	return m_adj[u];
