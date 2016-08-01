@@ -2,11 +2,6 @@
 #include <queue>
 using namespace std;
 
-Edge reverseEdge(const Edge &e)
-{
-	return Edge(e.second, e.first);
-}
-
 void Graph::resize(size_t v)
 {
 	for(size_t i = m_adj.size(); i < v; i++)
@@ -144,4 +139,24 @@ ostream &operator<<(ostream &out, const Graph &g)
 		cout << endl;
 	}
 	return out;
+}
+
+Edge reverseEdge(const Edge &e)
+{
+	return Edge(e.second, e.first);
+}
+
+size_t LCA(vector<size_t> &parent, vector<size_t> &level, size_t u, size_t v)
+{
+	size_t lu, lv;
+	while(u != v)
+	{
+		lu = level[u];
+		lv = level[v];
+		if(lu >= lv)
+			u = parent[u];
+		if(lv >= lu)
+			v = parent[v];
+	}
+	return u;
 }

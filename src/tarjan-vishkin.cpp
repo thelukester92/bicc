@@ -91,21 +91,6 @@ void TarjanVishkin::prefixSum(vector<size_t> &v)
 	}
 }
 
-size_t TarjanVishkin::LCA(size_t u, size_t v)
-{
-	size_t lu, lv;
-	while(u != v)
-	{
-		lu = level[u];
-		lv = level[v];
-		if(lu >= lv)
-			u = parent[u];
-		if(lv >= lu)
-			v = parent[v];
-	}
-	return u;
-}
-
 void TarjanVishkin::auxiliaryGraph(const Graph &g)
 {
 	gPrime.resize(g.V() + nt.E() / 2);
@@ -138,7 +123,7 @@ void TarjanVishkin::auxiliaryGraph(const Graph &g)
 		}
 		else
 		{
-			size_t p = LCA(u, v);
+			size_t p = LCA(parent, level, u, v);
 			if(preorder[v] < preorder[u])
 				gPrime.addEdge(u, N[i] + g.V() - 1);
 			if(u < v && p != u && p != v)
