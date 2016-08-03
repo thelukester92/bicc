@@ -22,21 +22,24 @@ void CKTV::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	
 	for(size_t i = 0; i < components.size(); i++) // parallelize
 	{
-		TarjanVishkin tv;
-		Graph sub;
-		vector< set<size_t> > localBicc;
-		vector<size_t> antiAlias, alias;
-		
-		sub.copyComponent(g, components[i], antiAlias, alias);
-		tv.getBiCC(sub, localBicc);
-		
-		for(size_t j = 0; j < localBicc.size(); j++)
+		if(components[i].size() > 1)
 		{
-			set<size_t> component;
-			for(set<size_t>::iterator k = localBicc[j].begin(); k != localBicc[j].end(); ++k)
-				component.insert(alias[*k]);
-			if(component.size() > 1)
-				bicc.push_back(component);
+			TarjanVishkin tv;
+			Graph sub;
+			vector< set<size_t> > localBicc;
+			vector<size_t> antiAlias, alias;
+			
+			sub.copyComponent(g, components[i], antiAlias, alias);
+			tv.getBiCC(sub, localBicc);
+			
+			for(size_t j = 0; j < localBicc.size(); j++)
+			{
+				set<size_t> component;
+				for(set<size_t>::iterator k = localBicc[j].begin(); k != localBicc[j].end(); ++k)
+					component.insert(alias[*k]);
+				if(component.size() > 1)
+					bicc.push_back(component);
+			}
 		}
 	}
 	

@@ -27,7 +27,7 @@ void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	remapAuxiliaryGraph(bicc);
 	for(size_t i = 0; i < bicc.size(); i++)
 	{
-		if(bicc[i].size() == 0)
+		if(bicc[i].size() == 0 || (i == 0 && bicc[i].size() == 2))
 		{
 			bicc.erase(bicc.begin() + i);
 			i--;

@@ -26,10 +26,19 @@ void loadGraph(const char *filename, Graph &g)
 	{
 		fin >> u >> v;
 		if(!fin.fail())
-			g.addDirectedEdge(u, v);
+			g.addEdge(u, v);
 	}
 	
 	fin.close();
+}
+
+// Connects a (potentially) unconnected graph
+void connectGraph(Graph &g)
+{
+	vector< vector<size_t> > components;
+	g.spanningTree(NULL, NULL,  NULL, NULL, &components);
+	for(size_t i = 1; i < components.size(); i++)
+		g.addEdge(components[i-1][0], components[i][0]);
 }
 
 int main(int argc, char **argv)
@@ -42,6 +51,11 @@ int main(int argc, char **argv)
 	
 	Graph g;
 	loadGraph(argv[1], g);
+	connectGraph(g);
+	
+#ifdef DEBUG
+	cout << "Graph:\n" << g << endl;
+#endif
 	
 	vector<BiCC *> algorithms;
 	algorithms.push_back(new TarjanVishkin());

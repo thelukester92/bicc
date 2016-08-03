@@ -21,21 +21,24 @@ void ChaitanyaKothapalli::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	
 	for(size_t i = 0; i < components.size(); i++) // parallelize
 	{
-		Graph aux, tPrime, ntPrime;
-		vector<size_t> parentPrime, levelPrime, alias;
-		vector< vector<size_t> > componentsPrime;
-		
-		auxiliaryGraph(g, nt, parent, level, components[i], aux, alias);
-		aux.spanningTree(&tPrime, &ntPrime, &parentPrime, &levelPrime);
-		removeBridges(aux, tPrime, ntPrime, parentPrime, levelPrime, componentsPrime);
-		
-		for(size_t j = 0; j < componentsPrime.size(); j++)
+		if(components[i].size() > 1)
 		{
-			set<size_t> component;
-			for(size_t k = 0; k < componentsPrime[j].size(); k++)
-				component.insert(alias[componentsPrime[j][k]]);
-			if(component.size() > 1)
-				bicc.push_back(component);
+			Graph aux, tPrime, ntPrime;
+			vector<size_t> parentPrime, levelPrime, alias;
+			vector< vector<size_t> > componentsPrime;
+			
+			auxiliaryGraph(g, nt, parent, level, components[i], aux, alias);
+			aux.spanningTree(&tPrime, &ntPrime, &parentPrime, &levelPrime);
+			removeBridges(aux, tPrime, ntPrime, parentPrime, levelPrime, componentsPrime);
+			
+			for(size_t j = 0; j < componentsPrime.size(); j++)
+			{
+				set<size_t> component;
+				for(size_t k = 0; k < componentsPrime[j].size(); k++)
+					component.insert(alias[componentsPrime[j][k]]);
+				if(component.size() > 1)
+					bicc.push_back(component);
+			}
 		}
 	}
 	
