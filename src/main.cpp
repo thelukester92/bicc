@@ -10,6 +10,28 @@ using namespace std;
 
 #define DEBUG
 
+// Loads a graph from a file
+// The first line of the file is the number of vertices
+// Remaining lines are the edges [fromVertex toVertex]
+void loadGraph(const char *filename, Graph &g)
+{
+	ifstream fin;
+	fin.open(filename);
+	
+	size_t V, u, v;
+	fin >> V;
+	g.resize(V);
+	
+	while(!fin.fail())
+	{
+		fin >> u >> v;
+		if(!fin.fail())
+			g.addDirectedEdge(u, v);
+	}
+	
+	fin.close();
+}
+
 int main(int argc, char **argv)
 {
 	if(argc < 2)
@@ -18,22 +40,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	
-	ifstream fin;
-	fin.open(argv[1]);
-	
 	Graph g;
-	size_t E, u, v;
-	fin >> E;
-	
-	for(size_t i = 0; i < E; i++)
-	{
-		fin >> u >> v;
-		if(g.V() <= u || g.V() <= v)
-			g.resize(max(u, v) + 1);
-		g.addDirectedEdge(u, v);
-	}
-	
-	fin.close();
+	loadGraph(argv[1], g);
 	
 	vector<BiCC *> algorithms;
 	algorithms.push_back(new TarjanVishkin());
