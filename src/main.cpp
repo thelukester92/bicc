@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	loadGraph(argv[1], g);
 	connectGraph(g);
 	
-	double avgDegree = (g.E() / 2) / g.V();
+	double avgDegree = double(g.E() / 2) / g.V();
 	size_t minDegree = INT_MAX;
 	size_t maxDegree = 0;
 	for(size_t i = 0; i < g.V(); i++)
