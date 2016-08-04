@@ -1,5 +1,6 @@
 #include "graph.h"
 #include <queue>
+#include <algorithm>
 using namespace std;
 
 void Graph::resize(size_t v)

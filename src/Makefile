@@ -1,8 +1,11 @@
+CC=g++-5
+CFLAGS=-Wall -fopenmp -std=c++11
+
 all:
-	g++ -O3 -o ../bin/bicc -Wall *.cpp
+	$(CC) -O3 -o ../bin/bicc $(CFLAGS) *.cpp
 
 dbg:
-	g++ -g -o ../bin/bicc -Wall *.cpp
+	$(CC) -g -o ../bin/bicc $(CFLAGS) *.cpp
 
 clean:
 	rm -rf ../bin/*

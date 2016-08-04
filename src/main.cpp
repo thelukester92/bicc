@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <chrono>
 #include "tarjan-vishkin.h"
 #include "chaitanya-kothapalli.h"
 #include "CK-TV.h"
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 {
 	if(argc < 2)
 	{
-		cout << "Usage: bicc [graph.txt]" << endl;
+		cout << "Usage: bicc [graph.txt] [nthreads]" << endl;
 		return 0;
 	}
 	
@@ -51,24 +52,31 @@ int main(int argc, char **argv)
 	loadGraph(argv[1], g);
 	connectGraph(g);
 	
+	size_t nthreads = 1;
+	if(argc >= 2)
+		nthreads = atoi(argv[2]);
+	
 #ifdef DEBUG
 	cout << "Graph:\n" << g << endl;
 #endif
 	
 	vector<BiCC *> algorithms;
-	algorithms.push_back(new TarjanVishkin());
-	algorithms.push_back(new ChaitanyaKothapalli());
-	algorithms.push_back(new CKTV());
+	algorithms.push_back(new TarjanVishkin(nthreads));
+	algorithms.push_back(new ChaitanyaKothapalli(nthreads));
+	algorithms.push_back(new CKTV(nthreads));
 	
 	for(size_t i = 0; i < algorithms.size(); i++)
 	{
 		cout << "===== " << algorithms[i]->name() << " =====" << endl;
 		
 		vector< set<size_t> > bicc;
-		clock_t start = clock();
-		algorithms[i]->getBiCC(g, bicc);
 		
-		cout << "Found " << bicc.size() << " biconnected components in " << double(clock() - start) / CLOCKS_PER_SEC << " seconds!" << endl;
+		chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
+		algorithms[i]->getBiCC(g, bicc);
+		chrono::high_resolution_clock::time_point stop_time = chrono::high_resolution_clock::now();
+		size_t nanoseconds = chrono::duration_cast<std::chrono::nanoseconds>(stop_time - start_time).count();
+		
+		cout << "Found " << bicc.size() << " biconnected components in " << nanoseconds / 1e9 << " seconds!" << endl;
 		
 #ifdef DEBUG
 		for(size_t j = 0; j < bicc.size(); j++)
