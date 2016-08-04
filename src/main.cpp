@@ -49,6 +49,10 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	
+	size_t nthreads = 1;
+	if(argc > 2)
+		nthreads = atoi(argv[2]);
+	
 	Graph g;
 	loadGraph(argv[1], g);
 	connectGraph(g);
@@ -64,14 +68,11 @@ int main(int argc, char **argv)
 			maxDegree = g.adj(i).size();
 	}
 	
-	cout << "Graph stats =====\n"
+	cout << "Run stats =====\n"
 	     << "Minimum degree: " << minDegree << "\n"
 	     << "Maximum degree: " << maxDegree << "\n"
-	     << "Average degree: " << avgDegree << endl;
-	
-	size_t nthreads = 1;
-	if(argc >= 2)
-		nthreads = atoi(argv[2]);
+	     << "Average degree: " << avgDegree << "\n"
+	     << "Thread count:   " << nthreads << endl;
 	
 #ifdef DEBUG
 	cout << "Graph:\n" << g << endl;
