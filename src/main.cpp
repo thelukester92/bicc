@@ -68,7 +68,8 @@ int main(int argc, char **argv)
 			maxDegree = g.adj(i).size();
 	}
 	
-	cout << "Run stats =====\n"
+	cout << "Run stats ====================================\n"
+	     << "File:           " << argv[1] << "\n"
 	     << "Minimum degree: " << minDegree << "\n"
 	     << "Maximum degree: " << maxDegree << "\n"
 	     << "Average degree: " << avgDegree << "\n"
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
 	
 	for(size_t i = 0; i < algorithms.size(); i++)
 	{
-		cout << "===== " << algorithms[i]->name() << " =====" << endl;
+		cout << algorithms[i]->name() << flush;
 		
 		vector< set<size_t> > bicc;
 		
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
 		chrono::high_resolution_clock::time_point stop_time = chrono::high_resolution_clock::now();
 		size_t nanoseconds = chrono::duration_cast<std::chrono::nanoseconds>(stop_time - start_time).count();
 		
-		cout << "Found " << bicc.size() << " biconnected components in " << nanoseconds / 1e9 << " seconds!" << endl;
+		cout << " found " << bicc.size() << " biconnected components in " << nanoseconds / 1e9 << " seconds!" << endl;
 		
 #ifdef DEBUG
 		for(size_t j = 0; j < bicc.size(); j++)
