@@ -52,6 +52,22 @@ int main(int argc, char **argv)
 	loadGraph(argv[1], g);
 	connectGraph(g);
 	
+	double avgDegree = g.E() / e.V();
+	size_t minDegree = INT_MAX;
+	size_t maxDegree = 0;
+	for(size_t i = 0; i < g.V(); i++)
+	{
+		if(g.adj(i).size() < minDegree)
+			minDegree = g.adj(i).size();
+		if(g.adj(i).size() > maxDegree)
+			maxDegree = g.adj(i).size();
+	}
+	
+	cout << "Graph stats =====\n"
+	     << "Minimum degree: " << minDegree << "\n"
+	     << "Maximum degree: " << maxDegree << "\n"
+	     << "Average degree: " << avgDegree << endl;
+	
 	size_t nthreads = 1;
 	if(argc >= 2)
 		nthreads = atoi(argv[2]);
