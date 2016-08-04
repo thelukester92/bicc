@@ -27,7 +27,7 @@ void TarjanVishkin::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 	remapAuxiliaryGraph(bicc);
 	for(size_t i = 0; i < bicc.size(); i++)
 	{
-		if(bicc[i].size() == 0 || (i == 0 && bicc[i].size() == 2))
+		if(bicc[i].size() == 0)
 		{
 			bicc.erase(bicc.begin() + i);
 			i--;
@@ -134,7 +134,7 @@ void TarjanVishkin::auxiliaryGraph(const Graph &g)
 		size_t u = g.edges()[i].first, v = g.edges()[i].second;
 		if(nti >= nt.edges().size() || g.edges()[i] == t.edges()[ti])
 		{
-			if(preorder[u] < preorder[v] && preorder[low[v]] < preorder[u])
+			if(preorder[u] < preorder[v] && level[low[v]] <= level[u])
 				gPrime.addEdge(u, v);
 			ti++;
 		}

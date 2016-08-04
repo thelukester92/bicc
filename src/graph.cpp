@@ -26,6 +26,23 @@ void Graph::addDirectedEdge(size_t u, size_t v)
 	m_adj[u].push_back(v);
 }
 
+void Graph::addEdgeSafe(size_t u, size_t v)
+{
+	addDirectedEdgeSafe(u, v);
+	addDirectedEdgeSafe(v, u);
+}
+
+void Graph::addDirectedEdgeSafe(size_t u, size_t v)
+{
+	Edge e(u, v);
+	vector<Edge>::iterator i = lower_bound(m_edges.begin(), m_edges.end(), e);
+	if(i == m_edges.end() || *i != e)
+	{
+		m_edges.insert(i, e);
+		m_adj[u].push_back(v);
+	}
+}
+
 void Graph::removeEdge(size_t u, size_t v)
 {
 	removeDirectedEdge(u, v);

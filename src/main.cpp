@@ -26,7 +26,7 @@ void loadGraph(const char *filename, Graph &g)
 	{
 		fin >> u >> v;
 		if(!fin.fail())
-			g.addEdge(u, v);
+			g.addEdgeSafe(u, v);
 	}
 	
 	fin.close();
