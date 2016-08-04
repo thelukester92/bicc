@@ -8,8 +8,6 @@
 #include "util.h"
 using namespace std;
 
-#define DEBUG
-
 // Loads a graph from a file
 // The first line of the file is the number of vertices
 // Remaining lines are the edges [fromVertex toVertex]

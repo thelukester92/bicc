@@ -110,7 +110,7 @@ void TarjanVishkin::findLow()
 
 void TarjanVishkin::auxiliaryGraph(const Graph &g)
 {
-	gPrime.resize(g.V() + nt.E() / 2);
+	gPrime.resize(g.V() + nt.E());
 	vector<size_t> N(g.E(), 0);
 	
 	size_t ti = 0, nti = 0;
@@ -120,8 +120,7 @@ void TarjanVishkin::auxiliaryGraph(const Graph &g)
 			ti++;
 		else
 		{
-			if(g.edges()[i].first < g.edges()[i].second)
-				N[i] = 1;
+			N[i] = 1;
 			nti++;
 		}
 	}
