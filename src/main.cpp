@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 	
 	for(size_t i = 0; i < algorithms.size(); i++)
 	{
-		cout << algorithms[i]->name() << flush;
+		cout << algorithms[i]->name() << endl;
 		
 		vector< set<size_t> > bicc;
 		
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 		chrono::high_resolution_clock::time_point stop_time = chrono::high_resolution_clock::now();
 		size_t nanoseconds = chrono::duration_cast<std::chrono::nanoseconds>(stop_time - start_time).count();
 		
-		cout << " found " << bicc.size() << " biconnected components in " << nanoseconds / 1e9 << " seconds!" << endl;
+		cout << nanoseconds / 1e9 << " seconds, " << bicc.size() << " biconnected components" << endl;
 		
 #ifdef DEBUG
 		for(size_t j = 0; j < bicc.size(); j++)
