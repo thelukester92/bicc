@@ -1,6 +1,6 @@
 #include "chaitanya-kothapalli.h"
 #include "util.h"
-#include <omp>
+#include <omp.h>
 using namespace std;
 
 // virtual
@@ -50,7 +50,7 @@ void ChaitanyaKothapalli::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 		
 		#pragma omp critical
 		{
-			bicc.insert(localBicc.begin(), localBicc.end());
+			bicc.insert(bicc.end(), localBicc.begin(), localBicc.end());
 		}
 	}
 	

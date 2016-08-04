@@ -1,6 +1,7 @@
 #include "CK-TV.h"
 #include "tarjan-vishkin.h"
 #include "util.h"
+#include <omp.h>
 using namespace std;
 
 // virtual
@@ -50,7 +51,7 @@ void CKTV::getBiCC(const Graph &g, vector< set<size_t> > &bicc)
 		
 		#pragma omp critical
 		{
-			bicc.insert(threadBicc.begin(), threadBicc.end());
+			bicc.insert(bicc.end(), threadBicc.begin(), threadBicc.end());
 		}
 	}
 	

@@ -5,7 +5,7 @@
 #include <tuple>
 #include <algorithm>
 #include <queue>
-#include <omp>
+#include <omp.h>
 #include "tarjan-vishkin.h"
 #include "util.h"
 using namespace std;
